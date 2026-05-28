@@ -1,8 +1,10 @@
 const express = require('express')
-const { boardTest } = require('../controllers/boardController')
+const { createBoard, getBoards, deleteBoard } = require('../controllers/boardController')
+const { protect } = require('../middleware/authMiddleware')
 
 const router = express.Router()
 
-router.get('/test', boardTest)
+router.route('/').post(protect, createBoard).get(protect, getBoards)
+router.delete('/:id', protect, deleteBoard)
 
 module.exports = router
