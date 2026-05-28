@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import { registerUser } from "../api/authApi";  // ← clean import
 
 function RegisterPage() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
 
-  const { login } = useAuth(); // ← same login() used after register
+  const { login } = useAuth();
   const navigate  = useNavigate();
 
   function handleChange(e) {
@@ -30,20 +31,11 @@ function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Registration failed");
-
-      // ✅ Same login() call — works for both login and register
+      const data = await registerUser(formData.name, formData.email, formData.password);
       login(data.user, data.token);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -95,7 +87,6 @@ function RegisterPage() {
               placeholder="••••••••" required
               className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
           </div>
-
           <button type="submit" disabled={loading}
             className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
             {loading ? (

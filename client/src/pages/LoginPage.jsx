@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import { loginUser } from "../api/authApi";   // ← clean import, no URLs in this file
 
 function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
 
-  const { login } = useAuth(); // ← get login() from context
+  const { login } = useAuth();
   const navigate  = useNavigate();
 
   function handleChange(e) {
@@ -20,20 +21,12 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Login failed");
-
-      // ✅ Save to context + localStorage in one call
+      const data = await loginUser(formData.email, formData.password);
       login(data.user, data.token);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message);
+      // axios wraps the server error inside err.response.data
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -67,14 +60,12 @@ function LoginPage() {
               placeholder="you@example.com" required
               className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
             <input type="password" name="password" value={formData.password} onChange={handleChange}
               placeholder="••••••••" required
               className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
           </div>
-
           <button type="submit" disabled={loading}
             className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
             {loading ? (
