@@ -1,10 +1,22 @@
-const App = () => {
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+function LoginPage() {
   return (
-    <main className='min-h-screen p-6'>
-      <h1 className='text-2xl font-semibold'>TaskFlow Frontend Setup Ready</h1>
-      <p className='mt-2 text-gray-600'>Start building pages and components inside the created folders.</p>
-    </main>
-  )
+    <div className="text-white bg-black min-h-screen flex items-center justify-center text-4xl">
+      Login Page Working
+    </div>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
