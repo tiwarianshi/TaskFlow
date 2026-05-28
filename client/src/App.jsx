@@ -1,26 +1,33 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import ProtectedRoute from "./routes/ProtectedRoute";
+
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
-import ProtectedRoute from "./routes/ProtectedRoute";
+import BoardsPage from "./pages/BoardsPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* Public routes */}
+        {/* ───────────────── Public Routes ───────────────── */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* Protected routes */}
+        {/* ─────────────── Protected Routes ─────────────── */}
         <Route element={<ProtectedRoute />}>
+
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/boards" element={<BoardsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+
         </Route>
 
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* ───────────── Default Redirect ───────────── */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
       </Routes>
     </BrowserRouter>
