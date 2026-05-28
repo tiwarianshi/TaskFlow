@@ -1,25 +1,21 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 function LoginPage() {
-  // Form state — one object holds all field values
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { login } = useAuth(); // ← get login() from context
+  const navigate  = useNavigate();
 
-  const navigate = useNavigate();
-
-  // Single handler for all inputs — reads the "name" attribute from the input
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
   async function handleSubmit(e) {
-    e.preventDefault(); // Stop browser from refreshing the page
+    e.preventDefault();
     setError("");
     setLoading(true);
 
@@ -31,13 +27,10 @@ function LoginPage() {
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Login failed");
 
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
-      // Save JWT token to localStorage so ProtectedRoute can read it
-      localStorage.setItem("token", data.token);
+      // ✅ Save to context + localStorage in one call
+      login(data.user, data.token);
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);
@@ -47,13 +40,9 @@ function LoginPage() {
   }
 
   return (
-    // Full screen centered layout
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-
-      {/* Card */}
       <div className="w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 p-8 shadow-xl">
 
-        {/* Logo / Brand */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-indigo-600 rounded-xl mb-4">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,85 +54,41 @@ function LoginPage() {
           <p className="text-gray-400 text-sm mt-1">Sign in to your TaskFlow account</p>
         </div>
 
-        {/* Error message */}
         {error && (
           <div className="mb-5 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
             {error}
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-
-          {/* Email field */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
-              Email address
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
-              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700
-                         text-white placeholder-gray-500 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                         transition"
-            />
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">Email address</label>
+            <input type="email" name="email" value={formData.email} onChange={handleChange}
+              placeholder="you@example.com" required
+              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
           </div>
 
-          {/* Password field */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700
-                         text-white placeholder-gray-500 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                         transition"
-            />
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
+            <input type="password" name="password" value={formData.password} onChange={handleChange}
+              placeholder="••••••••" required
+              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
           </div>
 
-          {/* Submit button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500
-                       text-white font-medium text-sm transition
-                       disabled:opacity-60 disabled:cursor-not-allowed
-                       flex items-center justify-center gap-2"
-          >
+          <button type="submit" disabled={loading}
+            className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
             {loading ? (
-              <>
-                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10"
-                    stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                Signing in...
-              </>
-            ) : (
-              "Sign in"
-            )}
+              <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>Signing in...</>
+            ) : "Sign in"}
           </button>
         </form>
 
-        {/* Footer link */}
         <p className="text-center text-sm text-gray-400 mt-6">
           Don't have an account?{" "}
-          <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition">
-            Create one
-          </Link>
+          <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition">Create one</Link>
         </p>
       </div>
     </div>
