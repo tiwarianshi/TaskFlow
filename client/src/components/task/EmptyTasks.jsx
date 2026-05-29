@@ -1,28 +1,118 @@
 // src/components/task/EmptyTasks.jsx
-// Shown inside a TaskColumn when there are zero tasks for that status.
-// Lightweight — no CTA (task creation comes in a later step).
 
-import { StickyNote } from "lucide-react";
-
-/**
- * @param {string} columnLabel - e.g. "Todo", "In Progress", "Done"
- */
-export default function EmptyTasks({ columnLabel }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-      {/* Dashed-border icon container */}
+import {
+    Plus,
+    CheckCircle2,
+    Clock,
+    CircleDot,
+  } from "lucide-react";
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Empty-state config per column
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  const CONFIG = {
+    todo: {
+      icon: CircleDot,
+      label: "No tasks yet",
+      sub: "Drop a task here or click + to create one",
+      iconColor: "text-gray-600",
+    },
+  
+    inprogress: {
+      icon: Clock,
+      label: "Nothing in progress",
+      sub: "Drop a task here to start working on it",
+      iconColor: "text-indigo-700",
+    },
+  
+    done: {
+      icon: CheckCircle2,
+      label: "No completed tasks",
+      sub: "Completed tasks will appear here",
+      iconColor: "text-emerald-700",
+    },
+  };
+  
+  /**
+   * @param {string} status
+   * @param {boolean} isDraggedOver
+   * @param {Function} onAddTask
+   */
+  export default function EmptyTasks({
+    status,
+    isDraggedOver = false,
+    onAddTask,
+  }) {
+    const config = CONFIG[status] ?? CONFIG.todo;
+  
+    const Icon = config.icon;
+  
+    return (
       <div
-        className="w-11 h-11 rounded-xl border border-dashed border-gray-700
-                   flex items-center justify-center mb-3"
+        className={`
+          flex flex-col items-center justify-center
+          gap-2
+          py-8 px-4
+          rounded-xl
+          border-2 border-dashed
+          text-center
+  
+          transition-all duration-200
+  
+          ${
+            isDraggedOver
+              ? `
+                border-indigo-500/60
+                bg-indigo-500/5
+                scale-[1.01]
+              `
+              : `
+                border-gray-700/60
+              `
+          }
+        `}
       >
-        <StickyNote size={18} className="text-gray-600" />
+        {/* Icon */}
+        <Icon
+          size={28}
+          className={`
+            transition-colors duration-200
+            ${
+              isDraggedOver
+                ? "text-indigo-400"
+                : config.iconColor
+            }
+          `}
+        />
+  
+        {/* Main label */}
+        <p className="text-xs font-medium text-gray-400">
+          {config.label}
+        </p>
+  
+        {/* Sub text */}
+        <p className="text-[11px] text-gray-600 max-w-[180px] leading-relaxed">
+          {config.sub}
+        </p>
+  
+        {/* Add button */}
+        {!isDraggedOver && (
+          <button
+            onClick={onAddTask}
+            className="
+              mt-1
+              flex items-center gap-1
+              text-[11px]
+              text-gray-500
+              hover:text-indigo-400
+              transition-colors duration-150
+            "
+          >
+            <Plus size={11} />
+            Add task
+          </button>
+        )}
       </div>
-      <p className="text-gray-600 text-xs font-medium">No tasks yet</p>
-      <p className="text-gray-700 text-[11px] mt-0.5">
-        {columnLabel === "Done"
-          ? "Completed tasks will appear here"
-          : "Add a task to get started"}
-      </p>
-    </div>
-  );
-}
+    );
+  }
