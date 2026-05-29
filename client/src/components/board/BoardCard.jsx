@@ -38,7 +38,7 @@ export default function BoardCard({ board, onDelete }) {
 
   return (
     <div
-      onClick={() => navigate(`/boards/${board._id}`)}
+    onClick={() => navigate(`/board/${board._id}`)}
       className="group relative bg-gray-800 border border-gray-700 rounded-xl overflow-hidden cursor-pointer
                  hover:border-gray-500 hover:shadow-xl hover:shadow-black/30
                  transition-all duration-200 hover:-translate-y-0.5"

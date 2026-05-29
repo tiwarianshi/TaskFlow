@@ -28,6 +28,22 @@ const getBoards = asyncHandler(async (req, res) => {
   res.status(200).json(boards)
 })
 
+const getBoardById = asyncHandler(async (req, res) => {
+  const board = await Board.findById(req.params.id)
+
+  if (!board) {
+    res.status(404)
+    throw new Error('Board not found')
+  }
+
+  if (board.user.toString() !== req.user) {
+    res.status(403)
+    throw new Error('Not authorized')
+  }
+
+  res.status(200).json(board)
+})
+
 const deleteBoard = asyncHandler(async (req, res) => {
   const board = await Board.findById(req.params.id)
 
@@ -45,4 +61,10 @@ const deleteBoard = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Board deleted successfully' })
 })
 
-module.exports = { boardTest, createBoard, getBoards, deleteBoard }
+module.exports = {
+  boardTest,
+  createBoard,
+  getBoards,
+  getBoardById,
+  deleteBoard,
+}
