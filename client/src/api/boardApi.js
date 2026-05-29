@@ -9,6 +9,14 @@ export async function getBoards() {
 }
 
 /**
+ * Fetch single board by ID.
+ */
+export async function getBoardById(boardId) {
+  const response = await api.get(`/boards/${boardId}`);
+  return response.data;
+}
+
+/**
  * Create a new board.
  */
 export async function createBoard(boardData) {
