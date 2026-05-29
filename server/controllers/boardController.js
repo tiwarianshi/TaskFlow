@@ -6,7 +6,7 @@ const boardTest = (req, res) => {
 }
 
 const createBoard = asyncHandler(async (req, res) => {
-  const { title, backgroundColor } = req.body
+  const { title, description, color } = req.body
 
   if (!title) {
     res.status(400)
@@ -15,7 +15,8 @@ const createBoard = asyncHandler(async (req, res) => {
 
   const board = await Board.create({
     title,
-    backgroundColor: backgroundColor || '',
+    description: description || "",
+    color: color ?? 0,
     user: req.user,
   })
 

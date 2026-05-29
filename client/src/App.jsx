@@ -1,37 +1,36 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+// App.jsx — updated with /boards route added
 
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import DashboardPage from "./pages/DashboardPage";
-import BoardsPage from "./pages/BoardsPage";
-import SettingsPage from "./pages/SettingsPage";
+import LoginPage       from "./pages/LoginPage";
+import RegisterPage    from "./pages/RegisterPage";
+import DashboardPage   from "./pages/DashboardPage";
+import BoardsPage      from "./pages/BoardsPage";       // ← NEW
+import BoardDetailPage from "./pages/BoardDetailPage";
 
-function App() {
+export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login"    element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-        {/* ───────────────── Public Routes ───────────────── */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+          {/* Protected routes — redirect to /login if no token */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/"            element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard"   element={<DashboardPage />} />
+            <Route path="/boards"      element={<BoardsPage />} />          {/* ← NEW */}
+            <Route path="/board/:boardId" element={<BoardDetailPage />} />
+          </Route>
 
-        {/* ─────────────── Protected Routes ─────────────── */}
-        <Route element={<ProtectedRoute />}>
-
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/boards" element={<BoardsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-
-        </Route>
-
-        {/* ───────────── Default Redirect ───────────── */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
-      </Routes>
-    </BrowserRouter>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
-
-export default App;

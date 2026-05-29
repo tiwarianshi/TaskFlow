@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const boardSchema = new mongoose.Schema(
   {
@@ -7,18 +7,25 @@ const boardSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    color: {
+      type: Number,
+      default: 0,
+    },
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
-    backgroundColor: {
-      type: String,
-      default: "#1e293b",
-      trim: true,
-    },
   },
-  { timestamps: true },
-)
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('Board', boardSchema)
+module.exports = mongoose.model("Board", boardSchema);
