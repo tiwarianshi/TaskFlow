@@ -19,6 +19,11 @@ const boardSchema = new mongoose.Schema(
       default: 0,
     },
 
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -1,92 +1,182 @@
-// components/board/BoardCard.jsx
-// Displays a single board as a clickable card.
-// Receives board data and a delete handler as props.
-
 import { useNavigate } from "react-router-dom";
-import { Trash2, Layout, Calendar } from "lucide-react";
+import { Trash2, Star, KanbanSquare } from "lucide-react";
 
-// Color options for board accent strips — index maps to board.color (0–5)
-const BOARD_COLORS = [
-  "from-indigo-500 to-violet-600",
-  "from-rose-500 to-pink-600",
-  "from-emerald-500 to-teal-600",
-  "from-amber-500 to-orange-600",
-  "from-sky-500 to-cyan-600",
-  "from-purple-500 to-fuchsia-600",
-];
+import BoardStats from "./BoardStats";
 
-export default function BoardCard({ board, onDelete }) {
+// ─── Gradient map ────────────────────────────────────────────────────────────
+const COLOR_GRADIENTS = {
+  "#6d28d9": "from-violet-600 to-violet-800",
+  "#0ea5e9": "from-sky-500 to-sky-700",
+  "#10b981": "from-emerald-500 to-emerald-700",
+  "#f59e0b": "from-amber-500 to-amber-700",
+  "#ef4444": "from-red-500 to-red-700",
+  "#ec4899": "from-pink-500 to-pink-700",
+  "#f97316": "from-orange-500 to-orange-700",
+  "#14b8a6": "from-teal-500 to-teal-700",
+};
+
+function getGradient(color) {
+  return COLOR_GRADIENTS[color] || "from-violet-600 to-violet-800";
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export default function BoardCard({
+  board,
+  onDelete,
+  onToggleFavorite,
+  onOpen,
+  stats,
+  statsLoading,
+}) {
   const navigate = useNavigate();
 
-  // Pick gradient based on stored color index
-  const gradient = BOARD_COLORS[board.color ?? 0];
+  const boardColor = board.color || "#6d28d9";
+  const gradient = getGradient(boardColor);
 
-  // Safe date formatting
-  const formattedDate = board.createdAt
-    ? new Date(board.createdAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "Recently";
+  // ─── Navigation ───────────────────────────────────────────────────────────
+  function handleCardClick() {
+    onOpen?.(board);
+    navigate(`/board/${board._id}`);
+  }
 
-  // Prevent delete button from triggering navigation
-  function handleDeleteClick(e) {
+  // ─── Delete ───────────────────────────────────────────────────────────────
+  function handleDelete(e) {
     e.stopPropagation();
-    onDelete(board._id);
+    onDelete?.(board._id);
+  }
+
+  // ─── Favorite toggle ──────────────────────────────────────────────────────
+  function handleFavorite(e) {
+    e.stopPropagation();
+    onToggleFavorite?.(board._id, board.isFavorite);
   }
 
   return (
     <div
-    onClick={() => navigate(`/board/${board._id}`)}
-      className="group relative bg-gray-800 border border-gray-700 rounded-xl overflow-hidden cursor-pointer
-                 hover:border-gray-500 hover:shadow-xl hover:shadow-black/30
-                 transition-all duration-200 hover:-translate-y-0.5"
+      onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          handleCardClick();
+        }
+      }}
+      className="
+        group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer
+        bg-zinc-900 border border-zinc-800
+        hover:border-zinc-700 hover:-translate-y-1
+        hover:shadow-xl hover:shadow-black/30
+        transition-all duration-200 select-none
+        focus:outline-none focus:ring-2 focus:ring-violet-500/40
+      "
     >
-      {/* Top gradient strip */}
-      <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
+      {/* ── Top accent strip ── */}
+      <div
+        className={`h-1.5 w-full bg-gradient-to-r ${gradient} flex-shrink-0`}
+      />
 
-      <div className="p-5">
+      {/* ── Card content ── */}
+      <div className="flex flex-col flex-1 p-4">
+
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Icon */}
-            <div
-              className={`flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br ${gradient}
-                         flex items-center justify-center`}
-            >
-              <Layout size={16} className="text-white" />
-            </div>
+        <div className="flex items-start gap-3">
 
-            {/* Title */}
-            <h3 className="text-white font-semibold text-base truncate leading-tight">
-              {board.title}
-            </h3>
+          {/* Board icon */}
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+            style={{
+              backgroundColor: `${boardColor}22`,
+            }}
+          >
+            <KanbanSquare
+              size={16}
+              style={{ color: boardColor }}
+            />
           </div>
 
-          {/* Delete Button */}
+          {/* Title + description */}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-zinc-100 truncate leading-tight">
+              {board.title}
+            </h3>
+
+            {board.description && (
+              <p className="mt-0.5 text-xs text-zinc-500 line-clamp-1">
+                {board.description}
+              </p>
+            )}
+          </div>
+
+          {/* Favorite button */}
           <button
-            onClick={handleDeleteClick}
-            className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg
-                       text-gray-500 hover:text-red-400 hover:bg-red-400/10
-                       transition-all duration-150"
-            title="Delete board"
+            onClick={handleFavorite}
+            className={`
+              flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center
+              transition-all duration-150
+              ${
+                board.isFavorite
+                  ? "text-amber-400 bg-amber-400/10 hover:bg-amber-400/20"
+                  : "text-zinc-600 hover:text-amber-400 hover:bg-zinc-800 opacity-0 group-hover:opacity-100"
+              }
+            `}
+            aria-label={
+              board.isFavorite
+                ? "Remove from favorites"
+                : "Add to favorites"
+            }
           >
-            <Trash2 size={15} />
+            <Star
+              size={13}
+              fill={board.isFavorite ? "currentColor" : "none"}
+            />
           </button>
         </div>
 
-        {/* Description */}
-        {board.description && (
-          <p className="text-gray-400 text-sm line-clamp-2 mb-4 leading-relaxed">
-            {board.description}
-          </p>
-        )}
+        {/* Stats */}
+        <div className="mt-4 flex-1">
+          {statsLoading ? (
+            <div className="space-y-1.5">
+              <div className="h-2 w-3/4 bg-zinc-800 rounded-full animate-pulse" />
+              <div className="h-1.5 w-full bg-zinc-800 rounded-full animate-pulse" />
+            </div>
+          ) : (
+            <BoardStats
+              stats={stats || {}}
+              color={boardColor}
+              compact
+            />
+          )}
+        </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-3 pt-3 border-t border-gray-700/60">
-          <Calendar size={12} />
-          <span>Created {formattedDate}</span>
+        <div className="mt-3 flex items-center justify-between pt-3 border-t border-zinc-800">
+
+          {/* Date */}
+          <span className="text-[11px] text-zinc-600">
+            {formatDate(board.updatedAt || board.createdAt)}
+          </span>
+
+          {/* Delete */}
+          <button
+            onClick={handleDelete}
+            className="
+              w-6 h-6 rounded-md flex items-center justify-center
+              text-zinc-700 hover:text-red-400 hover:bg-red-400/10
+              opacity-0 group-hover:opacity-100
+              transition-all duration-150
+            "
+            aria-label="Delete board"
+          >
+            <Trash2 size={12} />
+          </button>
         </div>
       </div>
     </div>
