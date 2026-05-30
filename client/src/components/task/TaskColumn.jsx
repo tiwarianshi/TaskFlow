@@ -1,174 +1,67 @@
-// src/components/task/TaskColumn.jsx
-// Kanban column with drag-and-drop support using dnd-kit.
-
 import { useDroppable } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
-
 import TaskCard from "./TaskCard";
 import EmptyTasks from "./EmptyTasks";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Column UI config
-// ─────────────────────────────────────────────────────────────────────────────
-
-const COLUMN_STYLES = {
-  todo: {
-    label: "Todo",
-    dotColor: "bg-gray-400",
-    countStyle: "bg-gray-700/70 text-gray-400",
-    headerBorder: "border-gray-700/60",
-    glow: "",
-    ring: "ring-gray-500/30",
-    highlight: "bg-gray-800/40",
-  },
-
-  inprogress: {
-    label: "In Progress",
-    dotColor: "bg-indigo-400",
-    countStyle: "bg-indigo-900/50 text-indigo-300",
-    headerBorder: "border-indigo-900/40",
-    glow: "shadow-indigo-900/10",
-    ring: "ring-indigo-500/30",
-    highlight: "bg-indigo-500/5",
-  },
-
-  done: {
-    label: "Done",
-    dotColor: "bg-emerald-400",
-    countStyle: "bg-emerald-900/50 text-emerald-300",
-    headerBorder: "border-emerald-900/40",
-    glow: "shadow-emerald-900/10",
-    ring: "ring-emerald-500/30",
-    highlight: "bg-emerald-500/5",
-  },
+const COLUMN_CONFIG = {
+  todo:       { label: "Todo",        dot: "bg-zinc-400",    header: "text-zinc-300",    badge: "bg-zinc-700 text-zinc-300",         ring: "ring-zinc-600/40",    highlight: "bg-zinc-700/20"    },
+  inprogress: { label: "In Progress", dot: "bg-blue-400",    header: "text-blue-300",    badge: "bg-blue-900/50 text-blue-300",      ring: "ring-blue-500/30",    highlight: "bg-blue-900/10"    },
+  done:       { label: "Done",        dot: "bg-emerald-400", header: "text-emerald-300", badge: "bg-emerald-900/50 text-emerald-300", ring: "ring-emerald-500/30", highlight: "bg-emerald-900/10" },
 };
 
-/**
- * @param {string} status
- * @param {Array} tasks
- * @param {Function} onAddTask
- * @param {Function} onEditTask
- */
-export default function TaskColumn({
-  status,
-  tasks = [],
-  onAddTask,
-  onEditTask,
-}) {
-  const styles = COLUMN_STYLES[status] ?? COLUMN_STYLES.todo;
-
-  // Task IDs required by SortableContext
-  const taskIds = tasks.map((task) => task._id);
-
-  // Make whole column droppable
-  const { setNodeRef, isOver } = useDroppable({
-    id: status,
-  });
+export default function TaskColumn({ status, tasks, onAddTask, onEditTask, activeId, members = [] }) {
+  const config  = COLUMN_CONFIG[status] || COLUMN_CONFIG.todo;
+  const taskIds = tasks.map((t) => t._id);
+  const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <div
-      className={`
-        flex flex-col flex-shrink-0
-        w-72 md:w-80
-        h-full
-        bg-gray-900/50 backdrop-blur-sm
-        border border-gray-800/80
-        rounded-2xl
-        overflow-hidden
-        shadow-lg ${styles.glow}
-        transition-all duration-200
-
-        ${
-          isOver
-            ? `ring-2 ${styles.ring} ${styles.highlight}`
-            : ""
-        }
-      `}
-    >
-      {/* ───────────────── Header ───────────────── */}
-      <div
-        className={`
-          flex items-center justify-between
-          px-4 py-3.5
-          border-b ${styles.headerBorder}
-          flex-shrink-0
-        `}
-      >
-        {/* Left side */}
+    <div className={`
+      flex flex-col w-72 md:w-80 flex-shrink-0 rounded-2xl
+      bg-zinc-900/80 border border-zinc-800
+      transition-all duration-200
+      ${isOver ? `ring-2 ${config.ring} ${config.highlight}` : ""}
+    `}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-zinc-800">
         <div className="flex items-center gap-2.5">
-          <span
-            className={`w-2.5 h-2.5 rounded-full ${styles.dotColor}`}
-          />
-
-          <h3 className="text-sm font-semibold text-gray-200 tracking-tight">
-            {styles.label}
-          </h3>
-
-          <span
-            className={`
-              px-2 py-0.5 rounded-full
-              text-xs font-semibold
-              ${styles.countStyle}
-            `}
-          >
-            {tasks.length}
-          </span>
+          <span className={`w-2 h-2 rounded-full ${config.dot}`} />
+          <h3 className={`text-sm font-semibold ${config.header}`}>{config.label}</h3>
+          <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${config.badge}`}>{tasks.length}</span>
         </div>
-
-        {/* Add task button */}
         <button
           onClick={() => onAddTask?.(status)}
-          className="
-            w-7 h-7 rounded-lg
-            flex items-center justify-center
-            text-gray-500 hover:text-white
-            hover:bg-gray-800
-            transition-colors duration-150
-          "
-          title={`Add task to ${styles.label}`}
+          className="w-6 h-6 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-all duration-150"
         >
-          <Plus size={15} />
+          <Plus size={14} />
         </button>
       </div>
 
-      {/* ───────────────── Task List ───────────────── */}
+      {/* Task list */}
       <div
         ref={setNodeRef}
-        className="
-          flex-1 overflow-y-auto
-          p-3 space-y-2.5
-          scrollbar-thin
-          scrollbar-track-transparent
-          scrollbar-thumb-gray-700
-          min-h-[120px]
-        "
+        className={`flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 min-h-[120px] transition-colors duration-200 ${isOver && tasks.length === 0 ? "justify-center items-center" : ""}`}
       >
-        <SortableContext
-          items={taskIds}
-          strategy={verticalListSortingStrategy}
-        >
+        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.length === 0 ? (
-            <EmptyTasks columnLabel={styles.label} />
+            <EmptyTasks
+              status={status}
+              isDraggedOver={isOver}
+              onAddTask={() => onAddTask?.(status)}
+            />
           ) : (
             tasks.map((task) => (
               <TaskCard
                 key={task._id}
                 task={task}
-                onClick={onEditTask}
+                onEdit={onEditTask}
+                isDone={status === "done"}
+                members={members}
               />
             ))
           )}
         </SortableContext>
-
-        {/* Extra bottom spacing for easier dropping */}
-        {tasks.length > 0 && (
-          <div className="h-2 flex-shrink-0" />
-        )}
+        {tasks.length > 0 && <div className="h-2 flex-shrink-0" />}
       </div>
     </div>
   );
