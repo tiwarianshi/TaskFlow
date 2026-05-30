@@ -31,6 +31,13 @@ const taskSchema = new mongoose.Schema(
       ref: 'Board',
       required: true,
     },
+
+    assignee: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

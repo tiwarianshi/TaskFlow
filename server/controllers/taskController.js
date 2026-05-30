@@ -6,7 +6,7 @@ const taskTest = (req, res) => {
 }
 
 const createTask = asyncHandler(async (req, res) => {
-  const { title, board, description, priority, dueDate, status } = req.body || {}
+  const { title, board, description, priority, dueDate,assignee, status } = req.body || {}
 
   if (!title || !board) {
     res.status(400)
@@ -21,6 +21,7 @@ const createTask = asyncHandler(async (req, res) => {
     priority: priority || 'medium',
     dueDate: dueDate || null,
     status: status || 'todo',
+    assignee,
   })
 
   res.status(201).json(task)
@@ -44,7 +45,7 @@ const getTasksByBoard = asyncHandler(async (req, res) => {
 
 const updateTask = asyncHandler(async (req, res) => {
   const { id } = req.params
-  const { title, description, priority, dueDate, status } = req.body || {}
+  const { title, description, priority, dueDate,assignee,status } = req.body || {}
 
   const task = await Task.findById(id)
 
@@ -62,6 +63,7 @@ const updateTask = asyncHandler(async (req, res) => {
   if (description !== undefined) task.description = description
   if (priority !== undefined) task.priority = priority
   if (dueDate !== undefined) task.dueDate = dueDate
+  if (assignee !== undefined) task.assignee = assignee
   if (status !== undefined) task.status = status
 
   const updatedTask = await task.save()

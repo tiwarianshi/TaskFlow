@@ -15,10 +15,10 @@ const boardSchema = new mongoose.Schema(
     },
 
     color: {
-      type: Number,
-      default: 0,
+      type: String,
+      default: "#6d28d9",
     },
-
+    
     isFavorite: {
       type: Boolean,
       default: false,

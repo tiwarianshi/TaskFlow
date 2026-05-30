@@ -95,7 +95,7 @@ export default function BoardsPage() {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Topbar />
 
-        <main className="flex-1 overflow-y-auto px-5 sm:px-7 py-6">
+        <main className="flex-1 overflow-y-auto px-5 sm:px-7 py-6 relative z-0">
           {/* Page header */}
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -109,9 +109,10 @@ export default function BoardsPage() {
             </div>
 
             <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors shadow-lg shadow-violet-600/20"
-            >
+             type="button"
+             onClick={() => setShowCreateModal(true)}
+             className="relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors shadow-lg shadow-violet-600/20"
+             >
               <Plus size={15} />
               <span className="hidden sm:inline">New Board</span>
             </button>
@@ -216,11 +217,12 @@ export default function BoardsPage() {
       </div>
 
       {showCreateModal && (
-        <CreateBoardModal
-          onClose={() => setShowCreateModal(false)}
-          onCreate={handleCreate}
-        />
-      )}
+  <CreateBoardModal
+    isOpen={showCreateModal}
+    onClose={() => setShowCreateModal(false)}
+    onCreate={handleCreate}
+  />
+)}
     </div>
   );
 }
