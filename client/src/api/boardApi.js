@@ -52,3 +52,18 @@ export async function getBoardsWithStats() {
   const { data } = await axiosInstance.get("/boards?includeStats=true");
   return data;
 }
+
+export async function getDashboardStats() {
+  const { data } = await axiosInstance.get('/boards/dashboard')
+  return data
+}
+
+export async function getDashboardActivity() {
+  const { data } = await axiosInstance.get('/boards/dashboard/activity')
+  return data
+}
+
+// export async function getDashboardActivity() {
+//   const { data } = await axiosInstance.get('/boards/dashboard/activity')
+//   return data
+// }

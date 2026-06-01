@@ -4,6 +4,8 @@ const {
   createBoard,
   getBoards,
   getBoardStats,
+  getDashboardStats,
+  getDashboardActivity,
   getBoardMembers,
   inviteBoardMember,
   removeBoardMember,
@@ -19,6 +21,8 @@ const router = express.Router()
 
 router.route('/').post(protect, createBoard).get(protect, getBoards)
 router.patch('/:boardId/favorite', protect, toggleFavoriteBoard)
+router.get('/dashboard', protect, getDashboardStats)
+router.get('/dashboard/activity', protect, getDashboardActivity)
 
 router.get('/:boardId/stats', protect, getBoardStats)
 router.get('/:boardId/members', protect, getBoardMembers)

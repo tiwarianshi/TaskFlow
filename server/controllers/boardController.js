@@ -92,6 +92,68 @@ const getBoardStats = asyncHandler(async (req, res) => {
   res.status(200).json(stats)
 })
 
+const getDashboardStats = asyncHandler(async (req, res) => {
+  const boards = await Board.find({
+    $or: [{ user: req.user }, { 'members.user': req.user }],
+  })
+    .sort({ updatedAt: -1 })
+    .lean()
+
+  const statsMap = await getStatsForBoards(boards.map((board) => board._id))
+
+  const boardsWithStats = boards.map((board) => ({
+    ...board,
+    stats: statsMap[board._id.toString()] || emptyStats(),
+  }))
+
+  const totalBoards = boardsWithStats.length
+  const totalTasks = boardsWithStats.reduce(
+    (sum, board) => sum + (board.stats?.total || 0),
+    0,
+  )
+  const completed = boardsWithStats.reduce(
+    (sum, board) => sum + (board.stats?.completed || 0),
+    0,
+  )
+  const pending = Math.max(totalTasks - completed, 0)
+  const completionRate = totalTasks ? Math.round((completed / totalTasks) * 100) : 0
+
+  const recentBoards = boardsWithStats.slice(0, 3).map((board) => ({
+    _id: board._id,
+    title: board.title,
+    color: board.color,
+    updatedAt: board.updatedAt,
+    stats: board.stats,
+  }))
+
+  res.status(200).json({
+    totalBoards,
+    totalTasks,
+    completed,
+    pending,
+    completionRate,
+    recentBoards,
+  })
+})
+
+const getDashboardActivity = asyncHandler(async (req, res) => {
+  const boards = await Board.find({
+    $or: [{ user: req.user }, { 'members.user': req.user }],
+  }).select('_id').lean()
+
+  const boardIds = boards.map((board) => board._id)
+
+  const activity = await Activity.find({
+    board: { $in: boardIds },
+  })
+    .populate('user', 'name email avatar')
+    .populate('board', 'title')
+    .sort({ createdAt: -1 })
+    .limit(10)
+
+  res.status(200).json(activity)
+})
+
 const getBoardById = asyncHandler(async (req, res) => {
   const board = await getBoardWithMembers(req.params.id)
 
@@ -397,6 +459,8 @@ module.exports = {
   createBoard,
   getBoards,
   getBoardStats,
+  getDashboardStats,
+  getDashboardActivity,
   getBoardMembers,
   inviteBoardMember,
   removeBoardMember,

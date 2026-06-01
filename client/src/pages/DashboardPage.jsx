@@ -1,81 +1,192 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import Sidebar from "../components/dashboard/Sidebar";
 import Topbar from "../components/dashboard/Topbar";
 import StatsCard from "../components/dashboard/StatsCard";
+import ActivityItem from "../components/activity/ActivityItem";
+import { getBoardsWithStats, getBoardStats, getDashboardActivity } from "../api/boardApi";
 
-// ─── Static placeholder data ───────────────────────────────────────────────────
-// These will later be replaced by real API calls (e.g. GET /api/boards, GET /api/tasks)
-// For now they let us build and style the UI without a live backend.
-
-const STATS = [
-  {
-    title: "Total Boards",
-    value: 4,
-    color: "bg-indigo-500/20",
-    iconColor: "text-indigo-400",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-          d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-      </svg>
-    ),
-  },
-  {
-    title: "Total Tasks",
-    value: 24,
-    color: "bg-emerald-500/20",
-    iconColor: "text-emerald-400",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    title: "In Progress",
-    value: 8,
-    color: "bg-amber-500/20",
-    iconColor: "text-amber-400",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  {
-    title: "Completed",
-    value: 12,
-    color: "bg-sky-500/20",
-    iconColor: "text-sky-400",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-];
-
-const RECENT_BOARDS = [
-  { _id: "1", title: "Website Redesign",    taskCount: 8,  color: "bg-indigo-500" },
-  { _id: "2", title: "Mobile App Launch",   taskCount: 5,  color: "bg-emerald-500" },
-  { _id: "3", title: "Marketing Campaign",  taskCount: 11, color: "bg-amber-500" },
-];
+const ICONS = {
+  boards: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+    </svg>
+  ),
+  tasks: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+    </svg>
+  ),
+  pending: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  completion: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+};
 
 // ─── DashboardPage ─────────────────────────────────────────────────────────────
 function DashboardPage() {
   const { user } = useAuth();
-
-  // Controls the mobile sidebar overlay (open/closed)
-  // On desktop the sidebar is always visible — this only matters on small screens
+  const [boards, setBoards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activity, setActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityError, setActivityError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Get first name only for a friendlier greeting
   const firstName = user?.name?.split(" ")[0] || "there";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDashboard() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        let data = await getBoardsWithStats();
+
+        if (data.length && data[0].stats === undefined) {
+          const statsResults = await Promise.all(
+            data.map(async (board) => {
+              try {
+                return { boardId: board._id, stats: await getBoardStats(board._id) };
+              } catch {
+                return { boardId: board._id, stats: { total: 0, completed: 0 } };
+              }
+            })
+          );
+
+          const statsMap = Object.fromEntries(
+            statsResults.map((item) => [item.boardId, item.stats])
+          );
+
+          data = data.map((board) => ({
+            ...board,
+            stats: statsMap[board._id] || { total: 0, completed: 0 },
+          }));
+        }
+
+        if (!cancelled) {
+          setBoards(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err?.response?.data?.message || "Failed to load dashboard analytics");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadDashboard();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadActivity() {
+      setActivityLoading(true)
+      setActivityError(null)
+
+      try {
+        const data = await getDashboardActivity()
+        if (!cancelled) {
+          setActivity(data)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setActivityError(err?.response?.data?.message || 'Failed to load activity')
+        }
+      } finally {
+        if (!cancelled) {
+          setActivityLoading(false)
+        }
+      }
+    }
+
+    loadActivity()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const analytics = useMemo(() => {
+    const totalBoards = boards.length;
+    const totalTasks = boards.reduce((sum, board) => sum + (board.stats?.total || 0), 0);
+    const completed = boards.reduce((sum, board) => sum + (board.stats?.completed || 0), 0);
+    const pending = Math.max(totalTasks - completed, 0);
+    const completionRate = totalTasks ? Math.round((completed / totalTasks) * 100) : 0;
+
+    return {
+      totalBoards,
+      totalTasks,
+      completed,
+      pending,
+      completionRate,
+    };
+  }, [boards]);
+
+  const overviewCards = [
+    {
+      title: "Total Boards",
+      value: analytics.totalBoards,
+      color: "bg-indigo-500/20",
+      iconColor: "text-indigo-400",
+      icon: ICONS.boards,
+    },
+    {
+      title: "Total Tasks",
+      value: analytics.totalTasks,
+      color: "bg-emerald-500/20",
+      iconColor: "text-emerald-400",
+      icon: ICONS.tasks,
+    },
+    {
+      title: "Pending Tasks",
+      value: analytics.pending,
+      color: "bg-amber-500/20",
+      iconColor: "text-amber-400",
+      icon: ICONS.pending,
+    },
+    {
+      title: "Completion",
+      value: `${analytics.completionRate}%`,
+      color: "bg-sky-500/20",
+      iconColor: "text-sky-400",
+      icon: ICONS.completion,
+    },
+  ];
+
+  const recentBoards = useMemo(
+    () =>
+      [...boards]
+        .sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() -
+            new Date(a.updatedAt).getTime()
+        )
+        .slice(0, 3),
+    [boards]
+  );
 
   return (
     // Full screen dark background
@@ -133,18 +244,24 @@ function DashboardPage() {
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
               Overview
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {STATS.map((stat) => (
-                <StatsCard
-                  key={stat.title}
-                  title={stat.title}
-                  value={stat.value}
-                  icon={stat.icon}
-                  color={stat.color}
-                  iconColor={stat.iconColor}
-                />
-              ))}
-            </div>
+            {error ? (
+              <div className="rounded-2xl border border-red-600/20 bg-red-950/40 p-5 text-sm text-red-300">
+                {error}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {overviewCards.map((stat) => (
+                  <StatsCard
+                    key={stat.title}
+                    title={stat.title}
+                    value={loading ? "—" : stat.value}
+                    icon={stat.icon}
+                    color={stat.color}
+                    iconColor={stat.iconColor}
+                  />
+                ))}
+              </div>
+            )}
           </section>
 
           {/* ── RECENT BOARDS ───────────────────────────────────────────── */}
@@ -162,60 +279,78 @@ function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {RECENT_BOARDS.map((board) => (
-                <Link
-                  key={board._id}
-                  to={`/board/${board._id}`}
-                  className="group bg-gray-900 border border-gray-800 rounded-xl p-5
-                             hover:border-gray-700 transition-colors duration-150"
-                >
-                  {/* Colored top stripe */}
-                  <div className={`w-10 h-1.5 rounded-full ${board.color} mb-4`} />
-
-                  <h4 className="text-white font-semibold text-sm group-hover:text-indigo-400 transition">
-                    {board.title}
-                  </h4>
-                  <p className="text-gray-500 text-xs mt-1">
-                    {board.taskCount} tasks
+              {loading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-28 rounded-xl border border-gray-800 bg-gray-900/70 animate-pulse"
+                  />
+                ))
+              ) : recentBoards.length > 0 ? (
+                recentBoards.map((board) => (
+                  <Link
+                    key={board._id}
+                    to={`/board/${board._id}`}
+                    className="group bg-gray-900 border border-gray-800 rounded-xl p-5
+                               hover:border-gray-700 transition-colors duration-150"
+                  >
+                    <div className={`w-10 h-1.5 rounded-full ${board.color || 'bg-indigo-500'} mb-4`} />
+                    <h4 className="text-white font-semibold text-sm group-hover:text-indigo-400 transition">
+                      {board.title}
+                    </h4>
+                    <p className="text-gray-500 text-xs mt-1">
+                      {board.stats?.total ?? 0} tasks
+                    </p>
+                  </Link>
+                ))
+              ) : (
+                <div className="col-span-full rounded-xl border border-gray-800 bg-gray-900 p-6 text-center">
+                  <p className="text-sm text-gray-400">No recent boards yet.</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Create a board and it will show up here once you open it.
                   </p>
-                </Link>
-              ))}
-
-              {/* Create new board card */}
-              <button
-                className="bg-gray-900 border border-dashed border-gray-700 rounded-xl p-5
-                           flex flex-col items-center justify-center gap-2
-                           hover:border-indigo-600 hover:bg-gray-800/50
-                           transition-colors duration-150 cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
                 </div>
-                <span className="text-gray-500 text-xs font-medium">New Board</span>
-              </button>
+              )}
             </div>
           </section>
 
-          {/* ── EMPTY STATE placeholder ───────────────────────────────────
-              Shown when the user has no tasks yet (swap this out later) */}
           <section>
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
               Recent Activity
             </h3>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-10
-                            flex flex-col items-center justify-center text-center">
-              <div className="w-14 h-14 rounded-full bg-gray-800 flex items-center justify-center mb-4">
-                <svg className="w-7 h-7 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-gray-400 font-medium text-sm">No recent activity</p>
-              <p className="text-gray-600 text-xs mt-1">
-                Create a board and start adding tasks to see your activity here.
-              </p>
+
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+              {activityError ? (
+                <div className="rounded-2xl border border-red-600/20 bg-red-950/40 p-5 text-sm text-red-300">
+                  {activityError}
+                </div>
+              ) : activityLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-20 rounded-2xl bg-zinc-800/70 animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : activity.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-zinc-800 bg-gray-900 p-8 text-center">
+                  <p className="text-sm text-gray-400">No recent activity</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Create a board or add a task to start generating activity.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {activity.map((item, index) => (
+                    <ActivityItem
+                      key={item._id || index}
+                      activity={item}
+                      isLast={index === activity.length - 1}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 
