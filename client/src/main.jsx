@@ -3,11 +3,13 @@ import ReactDOM from "react-dom/client";
 import { Toaster } from "react-hot-toast";
 import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { SocketProvider } from "./socket/SocketProvider.jsx";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
+      <SocketProvider>
 
       {/*
         <Toaster> lives here — outside App, inside AuthProvider.
@@ -47,6 +49,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       />
 
       <App />
+      </SocketProvider>
     </AuthProvider>
   </React.StrictMode>
 );
