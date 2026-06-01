@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { MOCK_ACTIVITY } from "../utils/collaborationUtils";
+import api from "../api/axiosInstance";
 
 // Backend-ready activity hook
 //
@@ -17,24 +17,9 @@ export function useActivityFeed(boardId) {
     setLoading(true);
 
     try {
-      // Future backend:
-      // const { data } = await axiosInstance.get(
-      //   `/boards/${boardId}/activity`
-      // );
+      const { data } = await api.get(`/boards/${boardId}/activity`);
 
-      await new Promise((r) => setTimeout(r, 350));
-
-      // Mock board-specific filtering
-      const filtered = MOCK_ACTIVITY.filter(
-        (item) => item.boardId === boardId || !item.boardId
-      );
-
-      // Newest first
-      const sorted = [...filtered].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-
-      setActivity(sorted);
+      setActivity(data);
     } catch (err) {
       // Activity feed is non-critical
       console.error("Activity feed failed:", err);

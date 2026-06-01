@@ -14,7 +14,7 @@ const taskSchema = new mongoose.Schema(
     },
     priority: {
       type: String,
-      enum: ['low', 'medium', 'high'],
+      enum: ['urgent', 'high', 'medium', 'low'],
       default: 'medium',
     },
     dueDate: {
@@ -33,9 +33,9 @@ const taskSchema = new mongoose.Schema(
     },
 
     assignee: {
-      type: String,
-      trim: true,
-      default: "",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
     },
     
     user: {

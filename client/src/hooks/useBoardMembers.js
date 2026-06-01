@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
-import { MOCK_MEMBERS } from "../utils/collaborationUtils";
-
-// Backend-ready structure.
-// Replace mock logic later with real API calls.
+import api from "../api/axiosInstance";
 
 export function useBoardMembers(boardId) {
   const [members, setMembers] = useState([]);
@@ -16,12 +13,9 @@ export function useBoardMembers(boardId) {
     setLoading(true);
 
     try {
-      // Future backend:
-      // const { data } = await axiosInstance.get(`/boards/${boardId}/members`);
+      const { data } = await api.get(`/boards/${boardId}/members`);
 
-      await new Promise((r) => setTimeout(r, 400));
-
-      const sorted = [...MOCK_MEMBERS].sort((a, b) => {
+      const sorted = [...data].sort((a, b) => {
         const order = {
           owner: 0,
           admin: 1,
@@ -46,6 +40,11 @@ export function useBoardMembers(boardId) {
   // ── Invite member ────────────────────────────────────
   const inviteMember = useCallback(
     async ({ email, role }) => {
+      if (!boardId) {
+        toast.error("Unable to invite member: missing board id");
+        return;
+      }
+
       const normalizedEmail = email.trim().toLowerCase();
 
       const alreadyExists = members.some(
@@ -57,25 +56,24 @@ export function useBoardMembers(boardId) {
         return;
       }
 
-      // Future backend:
-      // const { data } = await axiosInstance.post(
-      //   `/boards/${boardId}/members/invite`,
-      //   { email: normalizedEmail, role }
-      // );
+      const invitePath = `/boards/${encodeURIComponent(boardId)}/members/invite`;
+      if (import.meta.env.DEV) {
+        console.debug("Invite member request", invitePath, { email: normalizedEmail, role });
+      }
 
-      const newMember = {
-        _id: `u_${Date.now()}`,
-        name: normalizedEmail.split("@")[0],
-        email: normalizedEmail,
-        role,
-        avatar: null,
-      };
+      try {
+        const { data } = await api.post(invitePath, {
+          email: normalizedEmail,
+          role,
+        });
 
-      setMembers((prev) => [...prev, newMember]);
-
-      return newMember;
+        setMembers((prev) => [...prev, data]);
+        return data;
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to send invite");
+      }
     },
-    [members]
+    [boardId, members]
   );
 
   // ── Remove member ────────────────────────────────────
@@ -86,16 +84,13 @@ export function useBoardMembers(boardId) {
       setMembers((prev) => prev.filter((m) => m._id !== userId));
 
       try {
-        // Future backend:
-        // await axiosInstance.delete(
-        //   `/boards/${boardId}/members/${userId}`
-        // );
-      } catch {
+        await api.delete(`/boards/${boardId}/members/${userId}`);
+      } catch (error) {
         setMembers(previous);
-        toast.error("Failed to remove member");
+        toast.error(error.response?.data?.message || "Failed to remove member");
       }
     },
-    [members]
+    [boardId, members]
   );
 
   return {

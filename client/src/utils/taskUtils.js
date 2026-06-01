@@ -116,25 +116,41 @@ export const PRIORITY_CONFIG = {
     { value: "dueDate", label: "Due date" },
   ];
   
+  function parseDate(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  
+  function compareDates(a, b) {
+    if (!a && !b) return 0;
+    if (!a) return 1;
+    if (!b) return -1;
+    return a - b;
+  }
+  
   export function sortTasks(tasks, sortBy) {
     if (!tasks || !sortBy) return tasks;
     return [...tasks].sort((a, b) => {
+      const createdA = parseDate(a.createdAt);
+      const createdB = parseDate(b.createdAt);
+
       switch (sortBy) {
         case "newest":
-          return new Date(b.createdAt) - new Date(a.createdAt);
+          return compareDates(createdB, createdA);
         case "oldest":
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        case "priority":
-          return (
+          return compareDates(createdA, createdB);
+        case "priority": {
+          const diff =
             (PRIORITY_ORDER[a.priority] ?? 99) -
-            (PRIORITY_ORDER[b.priority] ?? 99)
-          );
+            (PRIORITY_ORDER[b.priority] ?? 99);
+          return diff || compareDates(createdB, createdA);
+        }
         case "dueDate": {
-          // Tasks with no due date sink to the bottom
-          if (!a.dueDate && !b.dueDate) return 0;
-          if (!a.dueDate) return 1;
-          if (!b.dueDate) return -1;
-          return new Date(a.dueDate) - new Date(b.dueDate);
+          const dueA = parseDate(a.dueDate);
+          const dueB = parseDate(b.dueDate);
+          const diff = compareDates(dueA, dueB);
+          return diff || compareDates(createdB, createdA);
         }
         default:
           return 0;

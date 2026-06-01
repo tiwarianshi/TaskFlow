@@ -13,13 +13,17 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "axios": "^1.16.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-async-handler": "^1.2.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.6.2"
+    "lucide-react": "^1.17.0",
+    "mongoose": "^9.6.2",
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.16.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

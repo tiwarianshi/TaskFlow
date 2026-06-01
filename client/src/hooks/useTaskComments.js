@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
-import { MOCK_COMMENTS } from "../utils/collaborationUtils";
+import api from "../api/axiosInstance";
 
 // Backend-ready hook
 // Expected endpoints:
@@ -21,23 +21,9 @@ export function useTaskComments(taskId) {
     setLoading(true);
 
     try {
-      // Future backend:
-      // const { data } = await axiosInstance.get(
-      //   `/tasks/${taskId}/comments`
-      // );
+      const { data } = await api.get(`/tasks/${taskId}/comments`);
 
-      await new Promise((r) => setTimeout(r, 300));
-
-      // Mock task-specific filtering
-      const filtered = MOCK_COMMENTS.filter(
-        (c) => c.taskId === taskId || !c.taskId
-      );
-
-      const sorted = [...filtered].sort(
-        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-      );
-
-      setComments(sorted);
+      setComments(data);
     } catch {
       toast.error("Failed to load comments");
     } finally {
@@ -75,24 +61,13 @@ export function useTaskComments(taskId) {
       setComments((prev) => [...prev, optimisticComment]);
 
       try {
-        // Future backend:
-        // const { data } = await axiosInstance.post(
-        //   `/tasks/${taskId}/comments`,
-        //   { body: trimmed }
-        // );
-
-        // Mock successful server response
-        await new Promise((r) => setTimeout(r, 500));
-
-        const realComment = {
-          ...optimisticComment,
-          optimistic: false,
-          _id: `c_${Date.now()}`,
-        };
+        const { data } = await api.post(`/tasks/${taskId}/comments`, {
+          body: trimmed,
+        });
 
         setComments((prev) =>
           prev.map((c) =>
-            c._id === optimisticComment._id ? realComment : c
+            c._id === optimisticComment._id ? data : c
           )
         );
       } catch {
@@ -118,12 +93,7 @@ export function useTaskComments(taskId) {
       );
 
       try {
-        // Future backend:
-        // await axiosInstance.delete(
-        //   `/tasks/${taskId}/comments/${commentId}`
-        // );
-
-        await new Promise((r) => setTimeout(r, 250));
+        await api.delete(`/tasks/${taskId}/comments/${commentId}`);
       } catch {
         setComments(previous);
         toast.error("Failed to delete comment");
