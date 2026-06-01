@@ -5,6 +5,7 @@ const connectDB = require('./config/db')
 const authRoutes = require('./routes/authRoutes')
 const boardRoutes = require('./routes/boardRoutes')
 const taskRoutes = require('./routes/taskRoutes')
+const notificationRoutes = require('./routes/notificationRoutes')
 const { notFound, errorHandler } = require('./middleware/errorMiddleware')
 
 dotenv.config()
@@ -26,6 +27,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/boards', boardRoutes)
 app.use('/api/tasks', taskRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 app.use(notFound)
 app.use(errorHandler)
