@@ -29,6 +29,32 @@ const boardSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
+    members: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: false,
+        },
+        inviteEmail: {
+          type: String,
+          lowercase: true,
+          trim: true,
+          default: null,
+        },
+        role: {
+          type: String,
+          enum: ["owner", "admin", "member"],
+          required: true,
+          default: "member",
+        },
+        joinedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

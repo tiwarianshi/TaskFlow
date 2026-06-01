@@ -22,28 +22,26 @@ const buildStats = (total, completed) => {
   }
 }
 
-const getStatsForBoard = async (boardId, userId) => {
+const getStatsForBoard = async (boardId) => {
   const [total, completed] = await Promise.all([
-    Task.countDocuments({ board: boardId, user: userId }),
-    Task.countDocuments({ board: boardId, user: userId, status: COMPLETED_STATUS }),
+    Task.countDocuments({ board: boardId }),
+    Task.countDocuments({ board: boardId, status: COMPLETED_STATUS }),
   ])
 
   return buildStats(total, completed)
 }
 
-const getStatsForBoards = async (boardIds, userId) => {
+const getStatsForBoards = async (boardIds) => {
   if (!boardIds.length) {
     return {}
   }
 
   const objectIds = boardIds.map((id) => new mongoose.Types.ObjectId(id))
-  const userObjectId = new mongoose.Types.ObjectId(userId)
 
   const rows = await Task.aggregate([
     {
       $match: {
         board: { $in: objectIds },
-        user: userObjectId,
       },
     },
     {

@@ -30,16 +30,23 @@ const AVATAR_HUES = [
     return Math.abs(hash);
   }
   
+  function normalizeName(name) {
+    if (typeof name === "string") return name;
+    if (name == null) return "";
+    return String(name);
+  }
+  
   export function getAvatarColor(name = "") {
     return AVATAR_HUES[
-      hashString(name) % AVATAR_HUES.length
+      hashString(normalizeName(name)) % AVATAR_HUES.length
     ];
   }
   
   export function getInitials(name = "") {
-    if (!name?.trim()) return "?";
+    const normalized = normalizeName(name);
+    if (!normalized.trim()) return "?";
   
-    const parts = name.trim().split(/\s+/);
+    const parts = normalized.trim().split(/\s+/);
   
     if (parts.length === 1) {
       return parts[0].slice(0, 2).toUpperCase();

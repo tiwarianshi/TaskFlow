@@ -31,23 +31,29 @@ export default function TaskModal({
     status: defaultStatus,
     priority: "medium",
     dueDate: "",
-    assignee: "",   // now stores member _id instead of plain text
+    assigneeId: "",
   });
   const [loading, setLoading]   = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (task) {
+      const assigneeId = task.assignee
+        ? typeof task.assignee === 'object'
+          ? task.assignee._id
+          : task.assignee
+        : "";
+
       setForm({
         title:      task.title       || "",
         description:task.description || "",
         status:     task.status      || defaultStatus,
         priority:   task.priority    || "medium",
         dueDate:    task.dueDate ? task.dueDate.slice(0, 10) : "",
-        assignee: task.assignee  || task.assignee || "",
+        assigneeId,
       });
     } else {
-      setForm({ title: "", description: "", status: defaultStatus, priority: "medium", dueDate: "", assignee: "" });
+      setForm({ title: "", description: "", status: defaultStatus, priority: "medium", dueDate: "", assigneeId: "" });
     }
   }, [task, defaultStatus]);
 

@@ -23,15 +23,21 @@ export default function UserAvatar({
 }) {
   if (!user) return null;
   const sz = SIZE_MAP[size] || SIZE_MAP.md;
-  const color = getAvatarColor(user.name || user.email || "");
-  const initials = getInitials(user.name || user.email || "");
+  const displayName = typeof user.name === "string"
+    ? user.name
+    : typeof user.email === "string"
+      ? user.email
+      : "";
+  const color = getAvatarColor(displayName);
+  const initials = getInitials(displayName);
+  const tooltipLabel = displayName || "User";
 
   return (
     <div className={`relative group flex-shrink-0 ${className}`}>
       {user.avatar ? (
         <img
           src={user.avatar}
-          alt={user.name || "User avatar"}
+          alt={tooltipLabel}
           className={`${sz.outer} rounded-full object-cover ${sz.ring} ring-zinc-900`}
         />
       ) : (
@@ -57,7 +63,7 @@ export default function UserAvatar({
           transition-opacity duration-150 z-50
           shadow-lg
         ">
-          {user.name || user.email}
+          {tooltipLabel}
           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-800" />
         </div>
       )}
