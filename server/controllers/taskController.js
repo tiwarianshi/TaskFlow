@@ -2,7 +2,9 @@ const asyncHandler = require('express-async-handler')
 const mongoose = require('mongoose')
 const Task = require('../models/Task')
 const Comment = require('../models/Comment')
+const User = require('../models/User')
 const { getBoardWithMembers, isBoardMember, createActivity } = require('../utils/boardHelpers')
+const { createTaskAssignedNotification, createCommentNotification } = require('../utils/notificationService')
 
 const taskTest = (req, res) => {
   res.status(200).json({ message: 'tasks route working' })
@@ -74,6 +76,27 @@ const createTask = asyncHandler(async (req, res) => {
     target: task.title,
     icon: 'create',
   })
+
+  // Create task assigned notification if task is created with an assignee
+  if (normalizedAssignee) {
+    const currentUser = await User.findById(req.user)
+    const assigneeUser = await User.findById(normalizedAssignee)
+
+    if (currentUser && assigneeUser) {
+      try {
+        await createTaskAssignedNotification({
+          assigneeId: normalizedAssignee,
+          taskTitle: task.title,
+          senderName: currentUser.name,
+          taskId: task._id,
+          boardId: taskBoard,
+          senderId: req.user,
+        })
+      } catch (notificationError) {
+        console.error('Failed to create task assigned notification:', notificationError.message)
+      }
+    }
+  }
 
   res.status(201).json(task)
 })
@@ -192,6 +215,27 @@ const updateTask = asyncHandler(async (req, res) => {
 
   const updatedTask = await task.save()
   await updatedTask.populate('assignee', 'name email avatar')
+
+  // Create task assigned notification if assignee changed and new assignee exists
+  if (assignee !== undefined && updatedTask.assignee && updatedTask.assignee.toString() !== previousAssignee) {
+    const currentUser = await User.findById(req.user)
+    const assigneeUser = await User.findById(updatedTask.assignee)
+
+    if (currentUser && assigneeUser) {
+      try {
+        await createTaskAssignedNotification({
+          assigneeId: updatedTask.assignee,
+          taskTitle: updatedTask.title,
+          senderName: currentUser.name,
+          taskId: updatedTask._id,
+          boardId: updatedTask.board,
+          senderId: req.user,
+        })
+      } catch (notificationError) {
+        console.error('Failed to create task assigned notification:', notificationError.message)
+      }
+    }
+  }
 
   if (status !== undefined && status !== previousStatus) {
     await createActivity({
@@ -339,6 +383,45 @@ const createTaskComment = asyncHandler(async (req, res) => {
   })
 
   await comment.populate('user', 'name email avatar')
+
+  // Create comment notification for task assignee
+  if (task.assignee && task.assignee.toString() !== req.user) {
+    const commentAuthor = await User.findById(req.user)
+
+    if (commentAuthor) {
+      try {
+        await createCommentNotification({
+          userId: task.assignee,
+          commentAuthor: commentAuthor.name,
+          taskTitle: task.title,
+          taskId: task._id,
+          boardId: task.board,
+          senderId: req.user,
+        })
+      } catch (notificationError) {
+        console.error('Failed to create comment notification:', notificationError.message)
+      }
+    }
+  }
+  // Also create comment notification for task creator (if different from commenter and no assignee)
+  else if (!task.assignee && task.user.toString() !== req.user) {
+    const commentAuthor = await User.findById(req.user)
+
+    if (commentAuthor) {
+      try {
+        await createCommentNotification({
+          userId: task.user,
+          commentAuthor: commentAuthor.name,
+          taskTitle: task.title,
+          taskId: task._id,
+          boardId: task.board,
+          senderId: req.user,
+        })
+      } catch (notificationError) {
+        console.error('Failed to create comment notification:', notificationError.message)
+      }
+    }
+  }
 
   res.status(201).json(comment)
 })

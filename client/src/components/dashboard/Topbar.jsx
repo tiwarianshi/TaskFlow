@@ -1,5 +1,6 @@
 import { useState } from "react";
 import useAuth from "../../hooks/useAuth";
+import NotificationBell from "../notifications/NotificationBell";
 
 // ─── Topbar / Navbar ──────────────────────────────────────────────────────────
 // Shown at the top of every dashboard page.
@@ -42,8 +43,11 @@ function Topbar({ title = "Dashboard", onMenuClick }) {
         <h1 className="text-white font-semibold text-lg">{title}</h1>
       </div>
 
-      {/* ── Right side: user info + avatar ────────────────────────────── */}
+      {/* ── Right side: notifications + user info + avatar ────────────── */}
       <div className="flex items-center gap-3">
+
+        {/* Notification Bell */}
+        <NotificationBell />
 
         {/* User name — hidden on very small screens */}
         <div className="hidden sm:block text-right">

@@ -10,6 +10,7 @@ const {
   isOwnerOrAdmin,
   createActivity,
 } = require('../utils/boardHelpers')
+const { createBoardInviteNotification } = require('../utils/notificationService')
 
 const boardTest = (req, res) => {
   res.status(200).json({ message: 'boards route working' })
@@ -324,6 +325,24 @@ const inviteBoardMember = asyncHandler(async (req, res) => {
     detail: user ? user.email : normalizedEmail,
     icon: 'user-plus',
   })
+
+  if (user) {
+    const inviter = await User.findById(req.user)
+
+    if (inviter) {
+      try {
+        await createBoardInviteNotification({
+          userId: user._id,
+          boardTitle: board.title,
+          inviterName: inviter.name,
+          boardId: board._id,
+          senderId: req.user,
+        })
+      } catch (notificationError) {
+        console.error('Failed to create board invite notification:', notificationError.message)
+      }
+    }
+  }
 
   res.status(201).json(memberData)
 })
