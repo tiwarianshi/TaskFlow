@@ -99,6 +99,15 @@ const createTask = asyncHandler(async (req, res) => {
   }
 
   res.status(201).json(task)
+
+  // Best-effort: emit socket event to notify board members (include senderId)
+  try {
+    const { getIo } = require('../socket')
+    const io = getIo()
+    if (io) io.to(task.board.toString()).emit('task.created', { task, senderId: req.user })
+  } catch (err) {
+    // ignore socket emit failures
+  }
 })
 
 const getTasksByBoard = asyncHandler(async (req, res) => {
@@ -273,6 +282,29 @@ const updateTask = asyncHandler(async (req, res) => {
     })
   }
 
+  // Best-effort: emit socket event to notify board members about the update
+  try {
+    const { getIo } = require('../socket')
+    const io = getIo()
+    if (io) io.to(updatedTask.board.toString()).emit('task.updated', { task: updatedTask, senderId: req.user })
+
+    // Additionally emit a dedicated moved event when status or position changed
+    const moved = (status !== undefined && status !== previousStatus) || (req.body && Object.prototype.hasOwnProperty.call(req.body, 'position'))
+    if (moved) {
+      const movePayload = {
+        task: updatedTask,
+        taskId: updatedTask._id,
+        fromStatus: previousStatus,
+        toStatus: updatedTask.status,
+        position: req.body ? req.body.position ?? null : null,
+        senderId: req.user,
+      }
+      io.to(updatedTask.board.toString()).emit('task.moved', movePayload)
+    }
+  } catch (err) {
+    // ignore socket emit failures
+  }
+
   res.status(200).json(updatedTask)
 })
 
@@ -298,6 +330,15 @@ const deleteTask = asyncHandler(async (req, res) => {
   }
 
   await task.deleteOne()
+  // Best-effort: notify board members that a task was deleted (include senderId)
+  try {
+    const { getIo } = require('../socket')
+    const io = getIo()
+    if (io) io.to(task.board.toString()).emit('task.deleted', { taskId: id, boardId: task.board.toString(), senderId: req.user })
+  } catch (err) {
+    // ignore
+  }
+
   res.status(200).json({ message: 'Task deleted successfully' })
 })
 
@@ -424,6 +465,15 @@ const createTaskComment = asyncHandler(async (req, res) => {
   }
 
   res.status(201).json(comment)
+
+  // Best-effort: emit comment created to board room
+  try {
+    const { getIo } = require('../socket')
+    const io = getIo()
+    if (io) io.to(task.board.toString()).emit('comment.created', { comment, taskId, boardId: task.board.toString(), senderId: req.user })
+  } catch (err) {
+    // ignore emit errors
+  }
 })
 
 const deleteTaskComment = asyncHandler(async (req, res) => {
@@ -448,6 +498,15 @@ const deleteTaskComment = asyncHandler(async (req, res) => {
 
   await comment.deleteOne()
   res.status(200).json({ message: 'Comment deleted successfully' })
+
+  // Best-effort: emit comment deleted to board room
+  try {
+    const { getIo } = require('../socket')
+    const io = getIo()
+    if (io) io.to(task.board.toString()).emit('comment.deleted', { commentId, taskId, boardId: task.board.toString(), senderId: req.user })
+  } catch (err) {
+    // ignore emit errors
+  }
 })
 
 module.exports = {

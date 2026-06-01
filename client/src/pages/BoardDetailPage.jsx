@@ -22,6 +22,9 @@ import { useBoardMembers } from "../hooks/useBoardMembers";
 import { useActivityFeed } from "../hooks/useActivityFeed";
 import { getTasksByBoard, updateTask } from "../api/taskApi";
 import { getBoardById } from "../api/boardApi";
+import { useSocket } from "../socket/SocketProvider.jsx";
+import useAuth from "../hooks/useAuth";
+import { safeOn, safeOff } from "../socket/socket.js";
 import { sortTasks } from "../utils/taskUtils";
 
 const STATUSES        = ["todo", "inprogress", "done"];
@@ -36,6 +39,9 @@ const dropAnimation = {
 export default function BoardDetailPage() {
   const { boardId } = useParams();
   const navigate    = useNavigate();
+
+  const socketCtx = useSocket();
+  const { user } = useAuth();
 
   const [board,      setBoard]      = useState(null);
   const [tasks,      setTasks]      = useState([]);
@@ -88,6 +94,92 @@ export default function BoardDetailPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Join the board room for realtime collaboration while this page is mounted
+  useEffect(() => {
+    if (!socketCtx || !boardId) return;
+    socketCtx.joinBoard(boardId);
+    return () => {
+      socketCtx.leaveBoard(boardId);
+    };
+  }, [socketCtx, boardId]);
+
+  // Real-time task synchronization: listen for task create/update/delete events
+  useEffect(() => {
+    const sock = socketCtx?.socket ? socketCtx.socket : socketCtx?.socket?.() || null;
+    if (!sock || !boardId) return;
+
+    const handleCreated = ({ task: newTask, senderId } = {}) => {
+      if (!newTask || newTask.board?.toString() !== boardId.toString()) return;
+      if (senderId && user && senderId === user._id) return; // ignore own events
+      setTasks((prev) => {
+        if (prev.find((t) => t._id === newTask._id)) return prev;
+        return [newTask, ...prev];
+      });
+    };
+
+    const handleUpdated = ({ task: updatedTask, senderId } = {}) => {
+      if (!updatedTask || updatedTask.board?.toString() !== boardId.toString()) return;
+      if (senderId && user && senderId === user._id) return; // ignore own events
+      setTasks((prev) => {
+        const idx = prev.findIndex((t) => t._id === updatedTask._id);
+        if (idx === -1) return [updatedTask, ...prev];
+
+        const existing = prev[idx];
+        const existingUpdated = existing.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
+        const incomingUpdated = updatedTask.updatedAt ? new Date(updatedTask.updatedAt).getTime() : Date.now();
+        if (incomingUpdated <= existingUpdated) return prev; // ignore stale
+
+        const next = [...prev];
+        next[idx] = updatedTask;
+        return next;
+      });
+    };
+
+    const handleDeleted = ({ taskId, boardId: bId, senderId } = {}) => {
+      if (!taskId || bId?.toString() !== boardId.toString()) return;
+      if (senderId && user && senderId === user._id) return; // ignore own events
+      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+    };
+
+    const handleMoved = ({ task: movedTask, taskId, fromStatus, toStatus, position, senderId } = {}) => {
+      if (!taskId) return;
+      if (senderId && user && senderId === user._id) return; // ignore own events
+      // Ensure this movement is for the current board
+      if (movedTask && movedTask.board && movedTask.board.toString() !== boardId.toString()) return;
+
+      setTasks((prev) => {
+        // Remove existing instance
+        const without = prev.filter((t) => t._id !== taskId);
+
+        // Group by status
+        const map = { todo: [], inprogress: [], done: [] };
+        without.forEach((t) => (map[t.status] ? map[t.status].push(t) : map.todo.push(t)));
+
+        // Ensure we have the destination list
+        const dest = map[toStatus] || [];
+        const insertAt = Math.max(0, Math.min(position ?? dest.length, dest.length));
+
+        const taskToInsert = movedTask || { _id: taskId, status: toStatus };
+        dest.splice(insertAt, 0, taskToInsert);
+
+        return [...map.todo, ...map.inprogress, ...map.done];
+      });
+    };
+
+    // Use safeOn/safeOff to avoid duplicates when components re-render
+    safeOn('task.created', handleCreated);
+    safeOn('task.updated', handleUpdated);
+    safeOn('task.deleted', handleDeleted);
+    safeOn('task.moved', handleMoved);
+
+    return () => {
+      safeOff('task.created', handleCreated);
+      safeOff('task.updated', handleUpdated);
+      safeOff('task.deleted', handleDeleted);
+      safeOff('task.moved', handleMoved);
+    };
+  }, [socketCtx, boardId]);
+
   // ── Grouped + sorted tasks ────────────────────────────────────────────────
   const tasksByStatus = useMemo(() => {
     const map = { todo: [], inprogress: [], done: [] };
@@ -135,12 +227,46 @@ export default function BoardDetailPage() {
       ? over.id
       : tasks.find((t) => t._id === over.id)?.status || currentTask.status;
     const previousStatus = tasksBeforeDrag.current?.find((t) => t._id === active.id)?.status;
+
+    // Compute destination index within the finalStatus column
+    const destList = tasksByStatus[finalStatus] || [];
+    let destIndex = destList.length; // default append
+    if (STATUSES.includes(over.id)) {
+      // dropped on column body -> append
+      destIndex = destList.length;
+    } else {
+      const overTaskId = over.id;
+      const idx = destList.findIndex((t) => t._id === overTaskId);
+      destIndex = idx === -1 ? destList.length : idx;
+    }
+
+    // Optimistically update local tasks order
+    const optimistic = (() => {
+      const without = tasks.filter((t) => t._id !== currentTask._id);
+      const map = { todo: [], inprogress: [], done: [] };
+      without.forEach((t) => (map[t.status] ? map[t.status].push(t) : map.todo.push(t)));
+      const insertInto = map[finalStatus] || [];
+      const clamped = Math.max(0, Math.min(destIndex, insertInto.length));
+      insertInto.splice(clamped, 0, { ...currentTask, status: finalStatus });
+      return [...map.todo, ...map.inprogress, ...map.done];
+    })();
+
+    setTasks(optimistic);
+
     if (previousStatus && previousStatus !== finalStatus) {
       try {
-        await updateTask(active.id, { status: finalStatus });
+        await updateTask(active.id, { status: finalStatus, position: destIndex });
       } catch {
         setTasks(tasksBeforeDrag.current);
         toast.error("Failed to update task status. Please try again.");
+      }
+    } else {
+      // If status didn't change but position might have, still attempt to send position
+      try {
+        await updateTask(active.id, { position: destIndex });
+      } catch {
+        setTasks(tasksBeforeDrag.current);
+        toast.error("Failed to reorder task. Please try again.");
       }
     }
     tasksBeforeDrag.current = null;

@@ -5,6 +5,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
 } from "../api/notificationApi";
+import { getSocket, safeOn, safeOff } from "../socket/socket";
 
 const DEFAULT_POLLING_INTERVAL = 30000;
 
@@ -112,6 +113,51 @@ export function useNotifications({
 
   useEffect(() => {
     fetchUnreadCount();
+  }, [fetchUnreadCount]);
+
+  // Real-time notifications: listen for created/updated/unread-count events
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleCreated = ({ notification } = {}) => {
+      if (!notification) return;
+      setNotifications((prev) => {
+        if (prev.find((n) => n._id === notification._id)) return prev;
+        return [notification, ...prev];
+      });
+      setUnreadCount((prev) => (notification.isRead ? prev : prev + 1));
+    };
+
+    const handleUpdated = ({ notification } = {}) => {
+      if (!notification) return;
+      setNotifications((prev) => {
+        const idx = prev.findIndex((n) => n._id === notification._id);
+        if (idx === -1) return [notification, ...prev];
+        const next = [...prev];
+        next[idx] = notification;
+        return next;
+      });
+
+      // Recompute unread count conservatively by fetching from server
+      fetchUnreadCount();
+    };
+
+    const handleUnreadCount = ({ count } = {}) => {
+      if (typeof count === 'number') setUnreadCount(count);
+    };
+
+    safeOn('notification.created', handleCreated);
+    safeOn('notification.updated', handleUpdated);
+    safeOn('notifications.unreadCount', handleUnreadCount);
+    safeOn('notifications.allRead', () => setUnreadCount(0));
+
+    return () => {
+      safeOff('notification.created', handleCreated);
+      safeOff('notification.updated', handleUpdated);
+      safeOff('notifications.unreadCount', handleUnreadCount);
+      safeOff('notifications.allRead');
+    };
   }, [fetchUnreadCount]);
 
   useEffect(() => {

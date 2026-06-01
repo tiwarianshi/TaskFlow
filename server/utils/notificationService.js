@@ -69,6 +69,17 @@ const createNotification = async ({
       notification._id,
     ).populate('sender', 'name avatar')
 
+    // Best-effort: emit notification to the user's personal socket room
+    try {
+      const { getIo } = require('../socket')
+      const io = getIo()
+        if (io && populatedNotification && populatedNotification.user) {
+        io.to(populatedNotification.user.toString()).emit('notification.created', { notification: populatedNotification })
+      }
+    } catch (err) {
+      // ignore socket errors
+    }
+
     return populatedNotification
   } catch (error) {
     console.error('Error creating notification:', error.message)

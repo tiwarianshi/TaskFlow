@@ -67,6 +67,22 @@ const markNotificationRead = asyncHandler(async (req, res) => {
     )
 
     res.status(200).json(populatedNotification)
+
+    // Best-effort: notify user's sockets that a notification was updated (read)
+    try {
+      const { getIo } = require('../socket')
+      const io = getIo()
+      if (io) {
+        // updated notification
+        io.to(populatedNotification.user.toString()).emit('notification.updated', { notification: populatedNotification })
+
+        // also updated unread count
+        const count = await Notification.countDocuments({ user: populatedNotification.user, isRead: false })
+        io.to(populatedNotification.user.toString()).emit('notifications.unreadCount', { count })
+      }
+    } catch (err) {
+      // ignore socket errors
+    }
   } catch (error) {
     if (!res.headersSent) {
       res.status(res.statusCode === 200 ? 500 : res.statusCode)
@@ -85,6 +101,18 @@ const markAllRead = asyncHandler(async (req, res) => {
     res.status(200).json({
       modifiedCount: result.modifiedCount ?? result.nModified ?? 0,
     })
+
+    // Best-effort: notify user's sockets that all notifications were marked read
+    try {
+      const { getIo } = require('../socket')
+      const io = getIo()
+      if (io) {
+        io.to(req.user.toString()).emit('notifications.allRead', { modifiedCount: result.modifiedCount ?? result.nModified ?? 0 })
+        io.to(req.user.toString()).emit('notifications.unreadCount', { count: 0 })
+      }
+    } catch (err) {
+      // ignore
+    }
   } catch (error) {
     res.status(500)
     throw new Error('Failed to mark notifications as read')

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import api from "../api/axiosInstance";
+import { getSocket, safeOn, safeOff } from "../socket/socket.js";
+import useAuth from "./useAuth";
 
 // Backend-ready hook
 // Expected endpoints:
@@ -13,6 +15,7 @@ export function useTaskComments(taskId) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
+  const { user } = useAuth();
 
   // ── Fetch comments ───────────────────────────────────
   const fetchComments = useCallback(async () => {
@@ -34,6 +37,37 @@ export function useTaskComments(taskId) {
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
+
+  // Real-time comments sync via socket
+  useEffect(() => {
+    if (!taskId) return;
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleCreated = ({ comment, taskId: tId, boardId, senderId } = {}) => {
+      if (!comment || tId !== taskId) return;
+      if (senderId && user && senderId === user._id) return; // ignore own events
+      setComments((prev) => {
+        if (prev.find((c) => c._id === comment._id)) return prev;
+        return [...prev, comment];
+      });
+    };
+
+    const handleDeleted = ({ commentId, taskId: tId, boardId, senderId } = {}) => {
+      if (!commentId || tId !== taskId) return;
+      if (senderId && user && senderId === user._id) return; // ignore own events
+      setComments((prev) => prev.filter((c) => c._id !== commentId));
+    };
+
+    safeOn("comment.created", handleCreated);
+    safeOn("comment.deleted", handleDeleted);
+
+    return () => {
+      safeOff("comment.created", handleCreated);
+      safeOff("comment.deleted", handleDeleted);
+    };
+  }, [taskId, user]);
 
   // ── Post comment ─────────────────────────────────────
   const postComment = useCallback(
