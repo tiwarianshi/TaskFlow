@@ -8,6 +8,7 @@ import LoginPage           from "./pages/LoginPage";
 import RegisterPage        from "./pages/RegisterPage";
 import DashboardPage       from "./pages/DashboardPage";
 import BoardsPage          from "./pages/BoardsPage";
+import CalendarPage        from "./pages/CalendarPage";
 import BoardDetailPage     from "./pages/BoardDetailPage";   // ← uses /board/:boardId
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/"                  element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard"         element={<DashboardPage />} />
             <Route path="/boards"            element={<BoardsPage />} />
+            <Route path="/calendar"          element={<CalendarPage />} />
             <Route path="/board/:boardId"    element={<BoardDetailPage />} />  {/* ← NEW */}
           </Route>
 

@@ -23,6 +23,15 @@ export async function getTasksByBoard(boardId) {
 }
 
 /**
+ * Fetch one task by id
+ * GET /tasks/:taskId
+ */
+export async function getTaskById(taskId) {
+  const res = await api.get(`/tasks/${taskId}`);
+  return res.data;
+}
+
+/**
  * Create a new task
  * POST /tasks
  */

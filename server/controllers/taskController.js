@@ -10,6 +10,57 @@ const taskTest = (req, res) => {
   res.status(200).json({ message: 'tasks route working' })
 }
 
+function getRefId(ref) {
+  if (!ref) return null
+  if (typeof ref === 'string') return ref
+  if (ref._id) return ref._id.toString()
+  return ref.toString()
+}
+
+function getBoardRecipientIds(boardDoc) {
+  const recipients = new Set()
+  const ownerId = getRefId(boardDoc?.user)
+
+  if (ownerId) recipients.add(ownerId)
+
+  if (Array.isArray(boardDoc?.members)) {
+    boardDoc.members.forEach((member) => {
+      const memberId = getRefId(member.user)
+      if (memberId) recipients.add(memberId)
+    })
+  }
+
+  return Array.from(recipients)
+}
+
+function emitCalendarTaskChanged({ boardDoc, task, action, senderId, previousDueDate = null }) {
+  const hasCalendarImpact = Boolean(task?.dueDate || previousDueDate)
+
+  if (!hasCalendarImpact) return
+
+  try {
+    const { getIo } = require('../socket')
+    const io = getIo()
+
+    if (!io) return
+
+    const payload = {
+      action,
+      taskId: task._id,
+      boardId: task.board.toString(),
+      dueDate: task.dueDate,
+      previousDueDate,
+      senderId,
+      task,
+    }
+
+    const rooms = [task.board.toString(), ...getBoardRecipientIds(boardDoc)]
+    io.to(rooms).emit('calendar.task.changed', payload)
+  } catch (err) {
+    // Calendar refresh events are best-effort and should not block task writes.
+  }
+}
+
 const createTask = asyncHandler(async (req, res) => {
   const {
     title,
@@ -108,6 +159,13 @@ const createTask = asyncHandler(async (req, res) => {
   } catch (err) {
     // ignore socket emit failures
   }
+
+  emitCalendarTaskChanged({
+    boardDoc,
+    task,
+    action: 'created',
+    senderId: req.user,
+  })
 })
 
 const getTasksByBoard = asyncHandler(async (req, res) => {
@@ -195,6 +253,7 @@ const updateTask = asyncHandler(async (req, res) => {
   const previousTitle = task.title
   const previousDescription = task.description
   const previousAssignee = task.assignee ? task.assignee.toString() : null
+  const previousDueDate = task.dueDate ? task.dueDate.toISOString() : null
 
   if (title !== undefined) task.title = title
   if (description !== undefined) task.description = description
@@ -305,6 +364,14 @@ const updateTask = asyncHandler(async (req, res) => {
     // ignore socket emit failures
   }
 
+  emitCalendarTaskChanged({
+    boardDoc,
+    task: updatedTask,
+    action: 'updated',
+    senderId: req.user,
+    previousDueDate,
+  })
+
   res.status(200).json(updatedTask)
 })
 
@@ -338,6 +405,14 @@ const deleteTask = asyncHandler(async (req, res) => {
   } catch (err) {
     // ignore
   }
+
+  emitCalendarTaskChanged({
+    boardDoc,
+    task,
+    action: 'deleted',
+    senderId: req.user,
+    previousDueDate: task.dueDate ? task.dueDate.toISOString() : null,
+  })
 
   res.status(200).json({ message: 'Task deleted successfully' })
 })

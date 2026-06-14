@@ -19,6 +19,7 @@ export default function TaskModal({
   task,
   boardId,
   defaultStatus = "todo",
+  defaultDueDate = "",
   onSave,
   onDelete,
   members = [],       // ← passed from BoardDetailPage via useBoardMembers
@@ -53,9 +54,9 @@ export default function TaskModal({
         assigneeId,
       });
     } else {
-      setForm({ title: "", description: "", status: defaultStatus, priority: "medium", dueDate: "", assigneeId: "" });
+      setForm({ title: "", description: "", status: defaultStatus, priority: "medium", dueDate: defaultDueDate, assigneeId: "" });
     }
-  }, [task, defaultStatus]);
+  }, [task, defaultStatus, defaultDueDate]);
 
   function set(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
