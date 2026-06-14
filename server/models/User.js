@@ -1,6 +1,44 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 
+const preferenceSchema = new mongoose.Schema(
+  {
+    notificationsEnabled: {
+      type: Boolean,
+      default: true,
+    },
+    soundEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    theme: {
+      type: String,
+      enum: ['dark', 'system', 'light'],
+      default: 'dark',
+    },
+    defaultView: {
+      type: String,
+      enum: ['kanban', 'calendar'],
+      default: 'kanban',
+    },
+    // Legacy preference keys kept so existing users and clients remain compatible.
+    enableNotifications: {
+      type: Boolean,
+      default: undefined,
+    },
+    enableSoundAlerts: {
+      type: Boolean,
+      default: undefined,
+    },
+    defaultBoardView: {
+      type: String,
+      enum: ['kanban', 'calendar'],
+      default: undefined,
+    },
+  },
+  { _id: false },
+)
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -23,6 +61,10 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+    },
+    preferences: {
+      type: preferenceSchema,
+      default: () => ({}),
     },
   },
   { timestamps: true },
