@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuth from "../../hooks/useAuth";
 
@@ -98,6 +99,11 @@ function Sidebar({ onClose }) {
         <NavLink to="/boards" className={navLinkClass} onClick={onClose}>
           <IconBoards />
           Boards
+        </NavLink>
+
+        <NavLink to="/calendar" className={navLinkClass} onClick={onClose}>
+          <Calendar className="w-5 h-5" />
+          Calendar
         </NavLink>
 
         <NavLink to="/settings" className={navLinkClass} onClick={onClose}>
