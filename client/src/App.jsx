@@ -3,6 +3,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider }    from "./context/AuthContext";
 import ProtectedRoute      from "./routes/ProtectedRoute";
+import SettingsPage from "./pages/SettingsPage";
 
 import LoginPage           from "./pages/LoginPage";
 import RegisterPage        from "./pages/RegisterPage";
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/dashboard"         element={<DashboardPage />} />
             <Route path="/boards"            element={<BoardsPage />} />
             <Route path="/calendar"          element={<CalendarPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/board/:boardId"    element={<BoardDetailPage />} />  {/* ← NEW */}
           </Route>
 

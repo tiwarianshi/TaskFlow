@@ -44,6 +44,11 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("token");
   }
 
+  function updateUser(userData) {
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
+  }
+
   // ── isAuthenticated ────────────────────────────────────────────────────────
   // A handy boolean: true when a token exists.
   // Use this anywhere instead of writing `token !== null` every time.
@@ -56,6 +61,7 @@ export function AuthProvider({ children }) {
     isAuthenticated, // true / false
     login,           // login(userData, tokenString)
     logout,          // logout()
+    updateUser,      // updateUser(userData)
   };
 
   return (

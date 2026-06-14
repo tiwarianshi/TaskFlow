@@ -2,6 +2,8 @@ const mongoose = require('mongoose')
 const asyncHandler = require('express-async-handler')
 const Board = require('../models/Board')
 const Activity = require('../models/Activity')
+const Notification = require('../models/Notification')
+const Task = require('../models/Task')
 const User = require('../models/User')
 const { emptyStats, getStatsForBoard, getStatsForBoards } = require('../utils/boardStats')
 const {
@@ -118,6 +120,15 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   )
   const pending = Math.max(totalTasks - completed, 0)
   const completionRate = totalTasks ? Math.round((completed / totalTasks) * 100) : 0
+  const boardIds = boardsWithStats.map((board) => board._id)
+
+  const [tasksAssigned, notificationsReceived] = await Promise.all([
+    Task.countDocuments({
+      board: { $in: boardIds },
+      assignee: req.user,
+    }),
+    Notification.countDocuments({ user: req.user }),
+  ])
 
   const recentBoards = boardsWithStats.slice(0, 3).map((board) => ({
     _id: board._id,
@@ -130,9 +141,11 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   res.status(200).json({
     totalBoards,
     totalTasks,
+    tasksAssigned,
     completed,
     pending,
     completionRate,
+    notificationsReceived,
     recentBoards,
   })
 })
