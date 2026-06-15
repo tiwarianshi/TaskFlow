@@ -1,0 +1,202 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\Anshi Tiwari\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.9.0
+2 info using node@v22.20.0
+3 silly config load:file:C:\Users\Anshi Tiwari\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\Anshi Tiwari\OneDrive\Desktop\TASKFLOW2\TaskFlow\server\.npmrc
+5 silly config load:file:C:\Users\Anshi Tiwari\.npmrc
+6 silly config load:file:C:\Users\Anshi Tiwari\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install nodemailer
+8 verbose argv "install" "nodemailer" "--cache" ".\\.npm-cache"
+9 verbose logfile logs-max:10 dir:C:\Users\Anshi Tiwari\OneDrive\Desktop\TASKFLOW2\TaskFlow\server\.npm-cache\_logs\2026-06-15T13_37_10_759Z-
+10 verbose logfile C:\Users\Anshi Tiwari\OneDrive\Desktop\TASKFLOW2\TaskFlow\server\.npm-cache\_logs\2026-06-15T13_37_10_759Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly fetch manifest nodemailer@*
+15 silly packumentCache full:https://registry.npmjs.org/nodemailer cache-miss
+16 verbose shrinkwrap failed to load node_modules/.package-lock.json out of date, updated: node_modules
+17 http fetch GET 200 https://registry.npmjs.org/npm 600ms
+18 http fetch GET 200 https://registry.npmjs.org/nodemailer 555ms (cache miss)
+19 silly packumentCache full:https://registry.npmjs.org/nodemailer set size:undefined disposed:false
+20 silly placeDep ROOT nodemailer@9.0.0 OK for: server@1.0.0 want: *
+21 silly reify moves {}
+22 silly audit bulk request {
+22 silly audit   '@mongodb-js/saslprep': [ '1.4.11' ],
+22 silly audit   '@socket.io/component-emitter': [ '3.1.2' ],
+22 silly audit   '@types/cors': [ '2.8.19' ],
+22 silly audit   '@types/node': [ '25.9.1' ],
+22 silly audit   '@types/webidl-conversions': [ '7.0.3' ],
+22 silly audit   '@types/whatwg-url': [ '13.0.0' ],
+22 silly audit   '@types/ws': [ '8.18.1' ],
+22 silly audit   accepts: [ '2.0.0', '1.3.8' ],
+22 silly audit   'agent-base': [ '6.0.2' ],
+22 silly audit   anymatch: [ '3.1.3' ],
+22 silly audit   asynckit: [ '0.4.0' ],
+22 silly audit   axios: [ '1.16.1' ],
+22 silly audit   'balanced-match': [ '4.0.4' ],
+22 silly audit   base64id: [ '2.0.0' ],
+22 silly audit   bcryptjs: [ '3.0.3' ],
+22 silly audit   'binary-extensions': [ '2.3.0' ],
+22 silly audit   'body-parser': [ '2.2.2' ],
+22 silly audit   'brace-expansion': [ '5.0.6' ],
+22 silly audit   braces: [ '3.0.3' ],
+22 silly audit   bson: [ '7.2.0' ],
+22 silly audit   'buffer-equal-constant-time': [ '1.0.1' ],
+22 silly audit   bytes: [ '3.1.2' ],
+22 silly audit   'call-bind-apply-helpers': [ '1.0.2' ],
+22 silly audit   'call-bound': [ '1.0.4' ],
+22 silly audit   chokidar: [ '3.6.0' ],
+22 silly audit   'combined-stream': [ '1.0.8' ],
+22 silly audit   'content-disposition': [ '1.1.0' ],
+22 silly audit   'content-type': [ '1.0.5', '2.0.0' ],
+22 silly audit   cookie: [ '0.7.2', '1.1.1' ],
+22 silly audit   'cookie-signature': [ '1.2.2' ],
+22 silly audit   cors: [ '2.8.6' ],
+22 silly audit   csstype: [ '3.2.3' ],
+22 silly audit   debug: [ '4.4.3' ],
+22 silly audit   'delayed-stream': [ '1.0.0' ],
+22 silly audit   depd: [ '2.0.0' ],
+22 silly audit   dotenv: [ '17.4.2' ],
+22 silly audit   'dunder-proto': [ '1.0.1' ],
+22 silly audit   'ecdsa-sig-formatter': [ '1.0.11' ],
+22 silly audit   'ee-first': [ '1.1.1' ],
+22 silly audit   encodeurl: [ '2.0.0' ],
+22 silly audit   'engine.io': [ '6.6.8' ],
+22 silly audit   'engine.io-parser': [ '5.2.3' ],
+22 silly audit   'mime-db': [ '1.52.0', '1.54.0' ],
+22 silly audit   'mime-types': [ '2.1.35', '3.0.2' ],
+22 silly audit   negotiator: [ '0.6.3', '1.0.0' ],
+22 silly audit   'es-define-property': [ '1.0.1' ],
+22 silly audit   'es-errors': [ '1.3.0' ],
+22 silly audit   'es-object-atoms': [ '1.1.2' ],
+22 silly audit   'es-set-tostringtag': [ '2.1.0' ],
+22 silly audit   'escape-html': [ '1.0.3' ],
+22 silly audit   etag: [ '1.8.1' ],
+22 silly audit   express: [ '5.2.1' ],
+22 silly audit   'express-async-handler': [ '1.2.0' ],
+22 silly audit   'fill-range': [ '7.1.1' ],
+22 silly audit   finalhandler: [ '2.1.1' ],
+22 silly audit   'follow-redirects': [ '1.16.0' ],
+22 silly audit   'form-data': [ '4.0.5' ],
+22 silly audit   forwarded: [ '0.2.0' ],
+22 silly audit   fresh: [ '2.0.0' ],
+22 silly audit   fsevents: [ '2.3.3' ],
+22 silly audit   'function-bind': [ '1.1.2' ],
+22 silly audit   'get-intrinsic': [ '1.3.0' ],
+22 silly audit   'get-proto': [ '1.0.1' ],
+22 silly audit   'glob-parent': [ '5.1.2' ],
+22 silly audit   goober: [ '2.1.19' ],
+22 silly audit   gopd: [ '1.2.0' ],
+22 silly audit   'has-flag': [ '3.0.0' ],
+22 silly audit   'has-symbols': [ '1.1.0' ],
+22 silly audit   'has-tostringtag': [ '1.0.2' ],
+22 silly audit   hasown: [ '2.0.3' ],
+22 silly audit   'http-errors': [ '2.0.1' ],
+22 silly audit   'https-proxy-agent': [ '5.0.1' ],
+22 silly audit   'iconv-lite': [ '0.7.2' ],
+22 silly audit   'ignore-by-default': [ '1.0.1' ],
+22 silly audit   inherits: [ '2.0.4' ],
+22 silly audit   'ipaddr.js': [ '1.9.1' ],
+22 silly audit   'is-binary-path': [ '2.1.0' ],
+22 silly audit   'is-extglob': [ '2.1.1' ],
+22 silly audit   'is-glob': [ '4.0.3' ],
+22 silly audit   'is-number': [ '7.0.0' ],
+22 silly audit   'is-promise': [ '4.0.0' ],
+22 silly audit   jsonwebtoken: [ '9.0.3' ],
+22 silly audit   jwa: [ '2.0.1' ],
+22 silly audit   jws: [ '4.0.1' ],
+22 silly audit   kareem: [ '3.3.0' ],
+22 silly audit   'lodash.includes': [ '4.3.0' ],
+22 silly audit   'lodash.isboolean': [ '3.0.3' ],
+22 silly audit   'lodash.isinteger': [ '4.0.4' ],
+22 silly audit   'lodash.isnumber': [ '3.0.3' ],
+22 silly audit   'lodash.isplainobject': [ '4.0.6' ],
+22 silly audit   'lodash.isstring': [ '4.0.1' ],
+22 silly audit   'lodash.once': [ '4.1.1' ],
+22 silly audit   'lucide-react': [ '1.17.0' ],
+22 silly audit   'math-intrinsics': [ '1.1.0' ],
+22 silly audit   'media-typer': [ '1.1.0' ],
+22 silly audit   'memory-pager': [ '1.5.0' ],
+22 silly audit   'merge-descriptors': [ '2.0.0' ],
+22 silly audit   minimatch: [ '10.2.5' ],
+22 silly audit   mongodb: [ '7.2.0' ],
+22 silly audit   'mongodb-connection-string-url': [ '7.0.1' ],
+22 silly audit   mongoose: [ '9.6.2' ],
+22 silly audit   mpath: [ '0.9.0' ],
+22 silly audit   mquery: [ '6.0.0' ],
+22 silly audit   ms: [ '2.1.3' ],
+22 silly audit   nodemon: [ '3.1.14' ],
+22 silly audit   'normalize-path': [ '3.0.0' ],
+22 silly audit   'object-assign': [ '4.1.1' ],
+22 silly audit   'object-inspect': [ '1.13.4' ],
+22 silly audit   'on-finished': [ '2.4.1' ],
+22 silly audit   once: [ '1.4.0' ],
+22 silly audit   parseurl: [ '1.3.3' ],
+22 silly audit   'path-to-regexp': [ '8.4.2' ],
+22 silly audit   picomatch: [ '2.3.2' ],
+22 silly audit   'proxy-addr': [ '2.0.7' ],
+22 silly audit   'proxy-from-env': [ '2.1.0' ],
+22 silly audit   'pstree.remy': [ '1.1.8' ],
+22 silly audit   punycode: [ '2.3.1' ],
+22 silly audit   qs: [ '6.15.2' ],
+22 silly audit   'range-parser': [ '1.2.1' ],
+22 silly audit   'raw-body': [ '3.0.2' ],
+22 silly audit   react: [ '19.2.6' ],
+22 silly audit   'react-dom': [ '19.2.6' ],
+22 silly audit   'react-hot-toast': [ '2.6.0' ],
+22 silly audit   'react-router': [ '7.16.0' ],
+22 silly audit   'react-router-dom': [ '7.16.0' ],
+22 silly audit   readdirp: [ '3.6.0' ],
+22 silly audit   router: [ '2.2.0' ],
+22 silly audit   'safe-buffer': [ '5.2.1' ],
+22 silly audit   'safer-buffer': [ '2.1.2' ],
+22 silly audit   scheduler: [ '0.27.0' ],
+22 silly audit   semver: [ '7.8.1' ],
+22 silly audit   send: [ '1.2.1' ],
+22 silly audit   'serve-static': [ '2.2.1' ],
+22 silly audit   'set-cookie-parser': [ '2.7.2' ],
+22 silly audit   setprototypeof: [ '1.2.0' ],
+22 silly audit   'side-channel': [ '1.1.0' ],
+22 silly audit   'side-channel-list': [ '1.0.1' ],
+22 silly audit   'side-channel-map': [ '1.0.1' ],
+22 silly audit   'side-channel-weakmap': [ '1.0.2' ],
+22 silly audit   sift: [ '17.1.3' ],
+22 silly audit   'simple-update-notifier': [ '2.0.0' ],
+22 silly audit   'socket.io': [ '4.8.3' ],
+22 silly audit   'socket.io-adapter': [ '2.5.7' ],
+22 silly audit   'socket.io-parser': [ '4.2.6' ],
+22 silly audit   'sparse-bitfield': [ '3.0.3' ],
+22 silly audit   statuses: [ '2.0.2' ],
+22 silly audit   'supports-color': [ '5.5.0' ],
+22 silly audit   'to-regex-range': [ '5.0.1' ],
+22 silly audit   toidentifier: [ '1.0.1' ],
+22 silly audit   touch: [ '3.1.1' ],
+22 silly audit   tr46: [ '5.1.1' ],
+22 silly audit   'type-is': [ '2.1.0' ],
+22 silly audit   undefsafe: [ '2.0.5' ],
+22 silly audit   'undici-types': [ '7.24.6' ],
+22 silly audit   unpipe: [ '1.0.0' ],
+22 silly audit   vary: [ '1.1.2' ],
+22 silly audit   'webidl-conversions': [ '7.0.0' ],
+22 silly audit   'whatwg-url': [ '14.2.0' ],
+22 silly audit   wrappy: [ '1.0.2' ],
+22 silly audit   ws: [ '8.20.1' ],
+22 silly audit   nodemailer: [ '9.0.0' ]
+22 silly audit }
+23 http cache nodemailer@https://registry.npmjs.org/nodemailer/-/nodemailer-9.0.0.tgz 0ms (cache hit)
+24 silly tarball no local data for nodemailer@https://registry.npmjs.org/nodemailer/-/nodemailer-9.0.0.tgz. Extracting by manifest.
+25 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 378ms
+26 silly audit report {}
+27 http fetch GET 200 https://registry.npmjs.org/nodemailer/-/nodemailer-9.0.0.tgz 480ms (cache miss)
+28 silly ADD node_modules/nodemailer
+29 verbose cwd C:\Users\Anshi Tiwari\OneDrive\Desktop\TASKFLOW2\TaskFlow\server
+30 verbose os Windows_NT 10.0.26200
+31 verbose node v22.20.0
+32 verbose npm  v11.9.0
+33 notice
+33 notice New minor version of npm available! 11.9.0 -> 11.17.0
+33 notice Changelog: https://github.com/npm/cli/releases/tag/v11.17.0
+33 notice To update run: npm install -g npm@11.17.0
+33 notice  { force: true, [Symbol(proc-log.meta)]: true }
+34 verbose exit 0
+35 info ok
