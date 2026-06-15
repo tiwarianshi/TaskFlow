@@ -100,6 +100,11 @@ function LoginPage() {
                          focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
                          disabled:opacity-50 transition"
             />
+            <div className="mt-2 text-right">
+              <Link to="/forgot-password" className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition">
+                Forgot Password?
+              </Link>
+            </div>
           </div>
 
           <button
