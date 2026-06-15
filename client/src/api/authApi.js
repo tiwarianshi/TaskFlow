@@ -30,6 +30,22 @@ export async function registerUser(name, email, password) {
   return normalizeAuthResponse(response.data);
 }
 
+export async function forgotPassword(email) {
+  const response = await api.post("/auth/forgot-password", {
+    email: email.trim(),
+  });
+
+  return response.data;
+}
+
+export async function resetPassword(token, password) {
+  const response = await api.post(`/auth/reset-password/${token}`, {
+    newPassword: password,
+  });
+
+  return response.data;
+}
+
 export async function updateProfile(profileData) {
   const response = await api.put("/auth/profile", profileData);
 

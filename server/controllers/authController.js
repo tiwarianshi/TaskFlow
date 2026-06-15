@@ -1,8 +1,46 @@
 const User = require('../models/User')
 const generateToken = require('../utils/generateToken')
+const sendResetPasswordEmail = require('../utils/sendResetPasswordEmail')
+const crypto = require('crypto')
+
+const RESET_TOKEN_EXPIRES_MS = 60 * 60 * 1000
+const RESET_PASSWORD_RESPONSE =
+  'If an account with that email exists, a password reset link has been sent.'
 
 const isValidEmail = (email) => {
   return /^\S+@\S+\.\S+$/.test(email)
+}
+
+const hashResetToken = (token) => {
+  return crypto.createHash('sha256').update(token).digest('hex')
+}
+
+const validatePasswordStrength = (password) => {
+  if (!password || typeof password !== 'string') {
+    return 'Please provide new password'
+  }
+
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters'
+  }
+
+  if (!/[a-z]/.test(password)) {
+    return 'Password must include at least one lowercase letter'
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    return 'Password must include at least one uppercase letter'
+  }
+
+  if (!/\d/.test(password)) {
+    return 'Password must include at least one number'
+  }
+
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return 'Password must include at least one special character'
+  }
+
+  return null
 }
 
 const registerUser = async (req, res) => {
@@ -90,6 +128,104 @@ const loginUser = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: error.message || 'Server error during login',
+    })
+  }
+}
+
+const forgotPassword = async (req, res) => {
+  try {
+    if (!req.body) {
+      return res.status(400).json({
+        message: 'Request body missing. Send JSON with Content-Type: application/json',
+      })
+    }
+
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({ message: 'Please provide email' })
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(200).json({ message: RESET_PASSWORD_RESPONSE })
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() })
+
+    if (!user) {
+      return res.status(200).json({ message: RESET_PASSWORD_RESPONSE })
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex')
+    const hashedResetToken = hashResetToken(resetToken)
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
+    const resetUrl = `${clientUrl.replace(/\/$/, '')}/reset-password/${resetToken}`
+
+    user.resetPasswordToken = hashedResetToken
+    user.resetPasswordExpires = new Date(Date.now() + RESET_TOKEN_EXPIRES_MS)
+    await user.save()
+
+    const emailResult = await sendResetPasswordEmail(user.email, resetUrl)
+
+    if (!emailResult.success) {
+      user.resetPasswordToken = null
+      user.resetPasswordExpires = null
+      await user.save()
+
+      return res.status(200).json({ message: RESET_PASSWORD_RESPONSE })
+    }
+
+    return res.status(200).json({ message: RESET_PASSWORD_RESPONSE })
+  } catch (error) {
+    console.error('Forgot password request failed:', error.message)
+    return res.status(200).json({ message: RESET_PASSWORD_RESPONSE })
+  }
+}
+
+const resetPassword = async (req, res) => {
+  try {
+    if (!req.body) {
+      return res.status(400).json({
+        message: 'Request body missing. Send JSON with Content-Type: application/json',
+      })
+    }
+
+    const { token } = req.params
+    const { newPassword } = req.body
+
+    if (!token) {
+      return res.status(400).json({ message: 'Reset token is required' })
+    }
+
+    if (!newPassword) {
+      return res.status(400).json({ message: 'Please provide new password' })
+    }
+
+    const passwordError = validatePasswordStrength(newPassword)
+    if (passwordError) {
+      return res.status(400).json({ message: passwordError })
+    }
+
+    const hashedResetToken = hashResetToken(token)
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedResetToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    })
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' })
+    }
+
+    user.password = newPassword
+    user.resetPasswordToken = null
+    user.resetPasswordExpires = null
+    await user.save()
+
+    return res.status(200).json({ message: 'Password reset successfully' })
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || 'Server error while resetting password',
     })
   }
 }
@@ -188,4 +324,12 @@ const protectedTest = (req, res) => {
   })
 }
 
-module.exports = { registerUser, loginUser, updateProfile, changePassword, protectedTest }
+module.exports = {
+  registerUser,
+  loginUser,
+  forgotPassword,
+  resetPassword,
+  updateProfile,
+  changePassword,
+  protectedTest,
+}
