@@ -207,16 +207,30 @@ export default function BoardDetailPage() {
     tasksBeforeDrag.current = tasks;
   }
 
+  // function handleDragOver({ active, over }) {
+  //   if (!over) return;
+  //   const aTask = tasks.find((t) => t._id === active.id);
+  //   if (!aTask) return;
+  //   const overStatus = STATUSES.includes(over.id)
+  //     ? over.id
+  //     : tasks.find((t) => t._id === over.id)?.status;
+  //   if (!overStatus || aTask.status === overStatus) return;
+  //   setTasks((prev) => prev.map((t) => t._id === active.id ? { ...t, status: overStatus } : t));
+  // }
   function handleDragOver({ active, over }) {
-    if (!over) return;
-    const aTask = tasks.find((t) => t._id === active.id);
-    if (!aTask) return;
-    const overStatus = STATUSES.includes(over.id)
-      ? over.id
-      : tasks.find((t) => t._id === over.id)?.status;
-    if (!overStatus || aTask.status === overStatus) return;
-    setTasks((prev) => prev.map((t) => t._id === active.id ? { ...t, status: overStatus } : t));
-  }
+  if (!over) return;
+
+  const aTask = tasks.find((t) => t._id === active.id);
+  if (!aTask) return;
+
+  const overStatus = STATUSES.includes(over.id)
+    ? over.id
+    : tasks.find((t) => t._id === over.id)?.status;
+
+  if (!overStatus || aTask.status === overStatus) return;
+
+  // do nothing here (important)
+}
 
   async function handleDragEnd({ active, over }) {
     setActiveTask(null);
