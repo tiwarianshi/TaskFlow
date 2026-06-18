@@ -21,7 +21,33 @@ if (process.env.MONGO_URI) {
 
 const app = express()
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "https://task-flow-anshi-dev.vercel.app"
+].filter(Boolean);
+
+const vercelRegex = /^https:\/\/task-flow-.*\.vercel\.app$/;
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (
+      allowedOrigins.includes(origin) ||
+      vercelRegex.test(origin)
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(null, false); // important: no crash
+  },
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
+
 app.use(express.json())
 
 app.get('/', (req, res) => {
