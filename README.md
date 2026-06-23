@@ -2,6 +2,14 @@
 
 TaskFlow is a full-stack productivity and project management application built for teams that need a clean way to organize boards, tasks, members, comments, activity, notifications, and calendar-based work. It combines a React frontend with an Express and MongoDB backend, plus real-time collaboration through Socket.IO.
 
+## Live Demo
+
+🚀 Frontend: https://task-flow-anshi-dev.vercel.app
+
+## GitHub
+
+📂 GitHub Repository: https://github.com/tiwarianshi/TaskFlow
+
 ## Overview
 
 TaskFlow helps users create boards, manage tasks visually, collaborate with members, track activity, and stay updated through notifications. The app includes authentication, protected routes, profile settings, password reset, drag-and-drop task movement, task comments, activity timelines, and a calendar view.
